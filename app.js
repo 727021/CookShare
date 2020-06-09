@@ -8,6 +8,7 @@ const session = require('express-session')
 const MongoDBStore = require('connect-mongodb-session')(session)
 const csrf = require('csurf')()
 const flash = require('connect-flash')()
+const multer = require('multer')
 require('dotenv').config()
 
 const PORT = process.env.PORT || 3000
@@ -39,13 +40,29 @@ const sessionOptions = {
     store: store
 }
 
+const multerOptions = {
+    storage: multer.diskStorage({
+        destination: (req, file, cb) => {
+            cb(null, 'uploads')
+        },
+        filename: (req, file, cb) => {
+            cb(null, new Date().toISOString() + '-' + file.originalname)
+        }
+    }),
+    fileFilter: (req, file, cb) => {
+        cb(null, file.mimetype === 'image/png' || file.mimetype === 'image/jpg' || file.mimetype === 'image/jpeg')
+    }
+}
+
 app
     .set('views', path.join(__dirname, 'views'))
     .set('view-engine', 'ejs')
     .use(morgan('dev'))
     .use(express.static(path.join(__dirname, 'public')))
+    .use('/uploads', express.static(path.join(__dirname, 'uploads')))
     .use(cors(corsOptions))
-    .use(bodyParser({ extended: true }))
+    .use(bodyParser.urlencoded({ extended: false }))
+    .use(multer(multerOptions).array('images'))
     .use(session(sessionOptions))
     .use(csrf)
     .use(flash)
