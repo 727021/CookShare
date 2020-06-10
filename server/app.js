@@ -11,6 +11,8 @@ const flash = require('connect-flash')()
 const multer = require('multer')
 require('dotenv').config()
 
+const User = require('./models/user')
+
 const PORT = process.env.PORT || 3000
 
 const app = express()
@@ -70,18 +72,18 @@ app
     .use(csrf)
     .use(flash)
     .use((req, res, next) => {
+        if (req.session.user)
+            User.findById(req.session.user._id).then(user => (req.user = user)).catch(err => next(err))
+        res.locals.user = req.session.user
         res.locals.csrf = req.csrfToken()
         next()
     })
-    .use('/api', (req, res, next) => {
-        res.send('This is the API')
-    })
+    .use('/api', require('./routes/api'))
     .use((req, res, next) => {
-        res.send('Hello, World!')
+        res.status(404).send({ url: req.url })
     })
     .use((err, req, res, next) => {
-        // res.render('500')
-        res.end()
+        res.status(500).send({ error: err.message })
     })
 
 mongoose
