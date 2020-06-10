@@ -2,7 +2,7 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const path = require('path')
 const morgan = require('morgan')
-const cors = require('cors')
+const cors = require('cors')()
 const mongoose = require('mongoose')
 const session = require('express-session')
 const MongoDBStore = require('connect-mongodb-session')(session)
@@ -20,8 +20,12 @@ const store = new MongoDBStore({
     collection: 'sessions'
 })
 
+const originWhitelist = [ 'https://cookshare.herokuapp.com/', 'http://localhost:8080' ]
 const corsOptions = {
-    origin: 'https://cookshare.herokuapp.com/',
+    origin: function(origin, callback) {
+        if (originWhitelist.indexOf(origin) !== -1) callback(null, true)
+        else callback(new Error('Not allowed by CORS'))
+    },
     optionsSuccessStatus: 200
 }
 
@@ -55,13 +59,12 @@ const multerOptions = {
 }
 
 app
-    .set('views', path.join(__dirname, 'views'))
-    .set('view-engine', 'ejs')
     .use(morgan('dev'))
     .use(express.static(path.join(__dirname, 'public')))
     .use('/uploads', express.static(path.join(__dirname, 'uploads')))
-    .use(cors(corsOptions))
+    .use(cors)
     .use(bodyParser.urlencoded({ extended: false }))
+    .use(bodyParser.json())
     .use(multer(multerOptions).array('images'))
     .use(session(sessionOptions))
     .use(csrf)
@@ -70,9 +73,10 @@ app
         res.locals.csrf = req.csrfToken()
         next()
     })
-    // .use('/', require('path/to/router'))
+    .use('/api', (req, res, next) => {
+        res.send('This is the API')
+    })
     .use((req, res, next) => {
-        // res.render('404')
         res.send('Hello, World!')
     })
     .use((err, req, res, next) => {
