@@ -1,5 +1,5 @@
 const router = require('express').Router()
-const { body, param } = require('express-validator')
+const { body, param, query } = require('express-validator')
 
 const { needsAdmin, needsAuth } = require('../middleware/isAuth')
 
@@ -17,7 +17,9 @@ const {
     deleteCookbook,
     addComment,
     editComment,
-    deleteComment
+    deleteComment,
+    getComments,
+    getSharing
 } = require('../controllers/cookbook')
 
 router
@@ -73,7 +75,6 @@ router
         [
             body('cid', 'Invalid cookbook ID').isMongoId(),
             body('rid', 'Invalid recipe ID').isMongoId(),
-            body('uid', 'Invalid user ID').isMongoId(),
             body('message', 'Invalid message')
                 .isString()
                 .trim()
@@ -87,7 +88,6 @@ router
         needsAuth,
         [
             body('cid', 'Invalid cookbook ID').isMongoId(),
-            body('rid', 'Invalid recipe ID').isMongoId(),
             body('mid', 'Invalid comment ID').isMongoId(),
             body('message', 'Invalid message')
                 .isString()
@@ -100,14 +100,17 @@ router
     .delete(
         '/comment',
         needsAuth,
-        [
-            body('cid', 'Invalid cookbook ID').isMongoId(),
-            body('rid', 'Invalid recipe ID').isMongoId(),
-            body('mid', 'Invalid comment ID').isMongoId()
-        ],
+        [ body('cid', 'Invalid cookbook ID').isMongoId(), body('mid', 'Invalid comment ID').isMongoId() ],
         deleteComment
     )
     .get('/:cid', needsAuth, [ param('cid', 'Invalid cookbook ID').isMongoId() ], getCookbook)
+    .get(
+        '/:cid/comment',
+        needsAuth,
+        [ param('cid', 'Invalid cookbook ID').isMongoId(), query('rid', 'Invalid recipe ID').isMongoId() ],
+        getComments
+    )
+    .get('/:cid/share', needsAuth, [ param('cid', 'Invalid cookbook ID').isMongoId() ], getSharing)
     .post(
         '/',
         needsAuth,

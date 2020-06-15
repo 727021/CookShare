@@ -3,6 +3,8 @@ const { validationResult } = require('express-validator')
 const { Cookbook, Recipe, User } = require('../models/models')
 const { isAdmin } = require('../util/isAuth')
 
+const sortComments = (a, b) => (a.date > b.date ? -1 : 1)
+
 exports.getCookbooks = async (req, res, next) => {
     try {
         const books = await Cookbook.find()
@@ -104,6 +106,22 @@ exports.removeRecipe = async (req, res, next) => {
     }
 }
 
+exports.getSharing = async (req, res, next) => {
+    const { cid } = req.params
+
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) return res.status(422).send({ errors: errors.array() })
+
+    try {
+        const book = await Cookbook.findOne({ _id: cid, owner: req.user }, 'shared').populate('shared.user', 'username')
+        if (!book) return res.status(409).send({ error: 'Cookbook not found' })
+
+        res.status(200).send(book.shared)
+    } catch (err) {
+        next(err)
+    }
+}
+
 exports.addSharing = async (req, res, next) => {
     const { cid, uid, status } = req.body
 
@@ -174,34 +192,101 @@ exports.removeSharing = async (req, res, next) => {
         book.sharing = updatedSharing
         const updatedBook = await book.save()
         if (!updatedBook) return res.status(409).send({ error: 'Failed to remove sharing' })
+
         res.status(204).end()
     } catch (err) {
         next(err)
     }
 }
 
-//TODO
-exports.addComment = async (req, res, next) => {
-    const { cid, rid, uid, message } = req.body
+exports.getComments = async (req, res, next) => {
+    const { cid } = req.params
+    const { rid } = req.query
 
     const errors = validationResult(req)
     if (!errors.isEmpty()) return res.status(422).send({ errors: errors.array() })
+
+    try {
+        const book = Cookbook.findOne({ _id: cid, 'recipes.recipe': rid }).populate(
+            'recipes.comments.author',
+            'username'
+        )
+        if (!book) return res.status(409).send({ error: 'Cookbook not found' })
+        const comments = book.recipes.find(r => r.recipe.toString() === rid.toString()).comments.sort(sortComments)
+
+        res.status(200).send(comments || [])
+    } catch (err) {
+        next(err)
+    }
 }
 
-//TODO
-exports.editComment = async (req, res, next) => {
-    const { cid, rid, mid, message } = req.body
+exports.addComment = async (req, res, next) => {
+    const { cid, rid, message } = req.body
 
     const errors = validationResult(req)
     if (!errors.isEmpty()) return res.status(422).send({ errors: errors.array() })
+
+    try {
+        const book = await Cookbook.findOne({ _id: cid, 'recipes.recipe': rid }).or([
+            { owner: req.user },
+            { 'shared.user': req.user, 'shared.status.accepted': true }
+        ])
+        if (!book) return res.status(409).send({ error: 'Cookbook not found' })
+        const recipe = book.recipes.findIndex(r => r.recipe.toString() === rid.toString())
+        book.recipes[recipe].comments.push({
+            author: req.user,
+            message
+        })
+        const updatedBook = await book.save().populate('recipes.comments.author', 'username')
+        if (!updatedBook) return res.status(409).send({ error: 'Failed to add comment' })
+        const comments = updatedBook.recipes
+            .find(r => r.recipe.toString() === rid.toString())
+            .comments.sort(sortComments)
+
+        res.status(201).send(comments)
+    } catch (err) {
+        next(err)
+    }
+}
+
+exports.editComment = async (req, res, next) => {
+    const { cid, mid, message } = req.body
+
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) return res.status(422).send({ errors: errors.array() })
+
+    try {
+        const book = await Cookbook.findOne({ _id: cid, 'recipes.comments._id': mid })
+        if (!book) return res.status(409).send({ error: 'Cookbook not found' })
+
+        const iRecipe = book.recipes.findIndex(r => r.comments.some(c => c._id.toString() === mid.toString()))
+        const iComment = book.recipes[iRecipe].comments.findIndex(c => c._id.toString() === mid.toString())
+        if (!(isAdmin(req) || req.user._id.toString() === book.recipes[iRecipe].comments[iComment].author.toString()))
+            return res.status(401).send({ error: 'Cookbook not found' })
+        book.recipes[iRecipe].comments[iComment].message = message
+        const updatedBook = await book.save().populate('recipes.comments.author', 'username')
+        if (!updatedBook) return res.status(409).send({ error: 'Failed to edit comment' })
+        const comments = updatedBook.recipes
+            .find(r => r.comments.some(c => c._id.toString() === mid.toString()))
+            .comments.sort(sortComments)
+
+        res.status(200).send(comments)
+    } catch (err) {
+        next(err)
+    }
 }
 
 //TODO
 exports.deleteComment = async (req, res, next) => {
-    const { cid, rid, mid } = req.body
+    const { cid, mid } = req.body
 
     const errors = validationResult(req)
     if (!errors.isEmpty()) return res.status(422).send({ errors: errors.array() })
+
+    try {
+    } catch (err) {
+        next(err)
+    }
 }
 
 exports.createCookbook = async (req, res, next) => {
