@@ -1,5 +1,5 @@
 const { Schema, Schema: { Types: { ObjectId } }, model } = require('mongoose')
-const { list } = require('convert-units')()
+const { exists } = require('../util/units')
 
 const recipeSchema = new Schema({
     author: {
@@ -28,7 +28,7 @@ const recipeSchema = new Schema({
         units: {
             type: String,
             required: true,
-            validate: x => list().some(val => val.abbr === x)
+            validate: x => exists(x)
         }
     },
     ingredients: [
@@ -43,8 +43,8 @@ const recipeSchema = new Schema({
             },
             units: {
                 type: String,
-                required: false,
-                validate: x => list().some(val => val.abbr === x)
+                required: true,
+                validate: x => exists(x)
             }
         }
     ],

@@ -1,7 +1,3 @@
-const fs = require('fs')
+const { unlink } = require('fs').promises
 
-exports.deleteFile = filePath => {
-    fs.unlink(filePath, err => {
-        if (err) throw err
-    })
-}
+exports.deleteFile = filePath => unlink(filePath)

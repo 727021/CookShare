@@ -10,7 +10,8 @@ const statusSchema = new Schema({
 const cookbookSchema = new Schema({
     title: {
         type: String,
-        required: true
+        required: true,
+        maxlength: 64
     },
     owner: {
         type: ObjectId,
@@ -41,6 +42,11 @@ const cookbookSchema = new Schema({
             },
             comments: [
                 {
+                    _id: {
+                        type: ObjectId,
+                        required: true,
+                        auto: true
+                    },
                     author: {
                         type: ObjectId,
                         required: true,

@@ -1,20 +1,27 @@
+const authUtil = require('../util/isAuth')
+
 module.exports = {
     /**
      * Redirect if not authenticated
      */
-    isAuth: (req, res, next) => {
-        next()
+    needsAuth: (req, res, next) => {
+        if (authUtil.isAuth(req)) return next()
+        res.status(401).send({ error: 'Not logged in' })
     },
+
     /**
      * Redirect if authenticated
      */
-    notAuth: (req, res, next) => {
-        next()
+    noAuth: (req, res, next) => {
+        if (!authUtil.isAuth(req)) return next()
+        res.status(401).send({ error: 'Already logged in' })
     },
+
     /**
      * Redirect if not an admin
      */
-    isAdmin: (req, res, next) => {
-        next()
+    needsAdmin: (req, res, next) => {
+        if (authUtil.isAdmin(req)) return next()
+        res.status(401).send({ error: 'Admin rights required' })
     }
 }

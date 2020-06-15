@@ -9,6 +9,7 @@ const MongoDBStore = require('connect-mongodb-session')(session)
 const csrf = require('csurf')()
 const flash = require('connect-flash')()
 const multer = require('multer')
+const { startAll } = require('./util/cron')
 require('dotenv').config()
 
 const User = require('./models/user')
@@ -69,27 +70,35 @@ app
     .use(bodyParser.json())
     .use(multer(multerOptions).array('images'))
     .use(session(sessionOptions))
-    .use(csrf)
+    // .use(csrf)
     .use(flash)
     .use((req, res, next) => {
         if (req.session.user)
-            User.findById(req.session.user._id).then(user => (req.user = user)).catch(err => next(err))
-        res.locals.user = req.session.user
-        res.locals.csrf = req.csrfToken()
-        next()
+            User.findById(req.session.user._id)
+                .then(user => {
+                    req.user = user
+                    next()
+                })
+                .catch(err => next(err))
+        else next()
     })
     .use('/api', require('./routes/api'))
     .use((req, res, next) => {
         res.status(404).send({ url: req.url })
     })
     .use((err, req, res, next) => {
-        res.status(500).send({ error: err.message })
+        console.error(err)
+        res.status(500).send({ error: process.env.NODE_ENV === 'development' ? err.message : 'Server Error' })
     })
 
 mongoose
     .connect(process.env.MONGODB_URL, mongooseOptions)
     .then(({ connections: [ { name: name } ] }) => {
         console.log(`Connected to MongoDB database '${name}'`)
-        app.listen(PORT, () => console.log('Listening on port', PORT))
+        app.listen(PORT, () => {
+            console.log('Listening on port', PORT)
+            startAll()
+            console.log('All cron jobs started')
+        })
     })
     .catch(console.error)
