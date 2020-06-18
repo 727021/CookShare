@@ -1,7 +1,7 @@
 const { validationResult } = require('express-validator')
 const { hash } = require('bcrypt')
 
-const { User, Cookbook } = require('../models/models')
+const { User, Cookbook, Recipe } = require('../models/models')
 const { SALT_ROUNDS } = require('../util/constants')
 const { isAdmin } = require('../util/isAuth')
 
@@ -36,7 +36,7 @@ exports.getAll = async (req, res, next) => {
 exports.getFavorites = async (req, res, next) => {
     try {
         const { favorites } = await User.findById(req.user._id, 'favorites')
-            .populate('favorites.recipe', '-steps -images')
+            .populate('favorites.recipe', '-images')
             .populate('favorites.recipe.author', 'username')
         res.send(favorites || [])
     } catch (err) {
@@ -55,7 +55,8 @@ exports.postFavorites = async (req, res, next) => {
             { owner: req.user._id },
             { 'shared.user': req.user._id, 'shared.status.accepted': true }
         ])
-        if (!cookbook) return res.status(401).send({ error: 'Recipe not found' })
+        const recipe = await Recipe.findOne({ _id: rid, author: req.user })
+        if (!cookbook && !recipe) return res.status(401).send({ error: 'Recipe not found' })
         if (!req.user.favorites.some(fav => fav.recipe.toString() === rid.toString()))
             req.user.favorites.push({ recipe: rid })
         const { favorites } = await req.user

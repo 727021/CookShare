@@ -170,7 +170,7 @@ exports.editSharing = async (req, res, next) => {
         const updatedBook = await book.save().populate('shared.user', 'username')
         if (!updatedBook) return res.status(409).send({ error: 'Failed to update sharing' })
 
-        res.status(201).send(updatedBook)
+        res.status(200).send(updatedBook)
     } catch (err) {
         next(err)
     }
@@ -276,7 +276,6 @@ exports.editComment = async (req, res, next) => {
     }
 }
 
-//TODO
 exports.deleteComment = async (req, res, next) => {
     const { cid, mid } = req.body
 
@@ -284,6 +283,18 @@ exports.deleteComment = async (req, res, next) => {
     if (!errors.isEmpty()) return res.status(422).send({ errors: errors.array() })
 
     try {
+        const book = await Cookbook.findOne({ _id: cid, 'recipes.comments._id': mid })
+        if (!book) return res.status(409).send({ error: 'Cookbook not found' })
+
+        const iRecipe = book.recipes.findIndex(r => r.comments.some(c => c._id.toString() === mid.toString()))
+        const iComment = book.recipes[iRecipe].comments.findIndex(c => c._id.toString() === mid.toString())
+        if (!(isAdmin(req) || req.user._id.toString() === book.recipes[iRecipe].comments[iComment].author.toString()))
+            return res.status(401).send({ error: 'Cookbook not found' })
+        book.recipes[iRecipe].comments = book.recipes[iRecipe].comments.filter(c => c._id.toString() !== mid.toString())
+        const updatedBook = await book.save()
+        if (!updatedBook) return res.status(409).send({ error: 'Failed to edit comment' })
+
+        res.status(204).end()
     } catch (err) {
         next(err)
     }

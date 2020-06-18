@@ -36,6 +36,17 @@ router
     .delete('/favorites', needsAuth, [ body('rid', 'Invalid recipe ID').isMongoId() ], deleteFavorites)
     .put('/admin', needsAdmin, [ body('uid', 'Invalid user ID').isMongoId(), body('admin').toBoolean() ], putAdmin)
     .get('/:uid', needsAuth, [ param('uid', 'Invalid user ID').isMongoId() ], getUser)
-    .delete('/', needsAuth, [ body('uid', 'Invalid user ID').isMongoId() ], deleteUser)
+    .delete(
+        '/',
+        needsAuth,
+        [
+            oneOf([
+                body('username').isAlphanumeric().isLength({ min: 6, max: 32 }).trim(),
+                body('email').isEmail().normalizeEmail()
+            ]),
+            body('password').isLength({ min: 8 }).trim()
+        ],
+        deleteUser
+    )
 
 module.exports = router

@@ -72,15 +72,15 @@ app
     .use(session(sessionOptions))
     // .use(csrf)
     .use(flash)
-    .use((req, res, next) => {
-        if (req.session.user)
-            User.findById(req.session.user._id)
-                .then(user => {
-                    req.user = user
-                    next()
-                })
-                .catch(err => next(err))
-        else next()
+    .use(async (req, res, next) => {
+        if (req.session.user) {
+            try {
+                req.user = await User.findById(req.session.user._id)
+                next()
+            } catch (err) {
+                next(err)
+            }
+        } else next()
     })
     .use('/api', require('./routes/api'))
     .use((req, res, next) => {
