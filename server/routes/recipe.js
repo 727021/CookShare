@@ -49,10 +49,10 @@ router
         createRecipe
     )
     .put(
-        '/',
+        '/:rid',
         needsAuth,
         [
-            body('sid', 'Invalid recipe ID').isMongoId(),
+            param('rid', 'Invalid recipe ID').isMongoId(),
             body('title', 'Please enter a title.').isString().notEmpty().trim(),
             body('description', 'Description must be shorter than 1024 characters.')
                 .optional()
@@ -79,6 +79,6 @@ router
         ],
         editRecipe
     )
-    .delete('/', needsAuth, [ body('rid', 'Invalid recipe ID').isMongoId() ], deleteRecipe)
+    .delete('/:rid', needsAuth, [ param('rid', 'Invalid recipe ID').isMongoId() ], deleteRecipe)
 
 module.exports = router

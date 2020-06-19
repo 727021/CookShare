@@ -77,7 +77,8 @@ exports.editRecipe = async (req, res, next) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) return res.status(422).send({ errors: errors.array() })
 
-    const { rid, title, description, serving, ingredients, steps } = req.body
+    const { rid } = req.params
+    const { title, description, serving, ingredients, steps } = req.body
     // TODO Make sure image uploads work
     const images = req.files ? req.files.map(f => f.filename) : []
 
@@ -108,7 +109,7 @@ exports.deleteRecipe = async (req, res, next) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) return res.status(422).send({ errors: errors.array() })
 
-    const { rid } = req.body
+    const { rid } = req.params
 
     try {
         const recipe = isAdmin(req)

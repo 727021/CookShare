@@ -1,5 +1,5 @@
 const router = require('express').Router()
-const { body, param, query } = require('express-validator')
+const { body, param } = require('express-validator')
 
 const { needsAdmin, needsAuth } = require('../middleware/isAuth')
 
@@ -23,94 +23,10 @@ const {
 } = require('../controllers/cookbook')
 
 router
+    // Cookbooks
     .get('/', needsAuth, getCookbooks)
     .get('/all', needsAdmin, getAll)
-    .post(
-        '/recipe',
-        needsAuth,
-        [ body('cid', 'Invalid cookbook ID').isMongoId(), body('rid', 'Invalid recipe ID').isMongoId() ],
-        addRecipe
-    )
-    .delete(
-        '/recipe',
-        needsAuth,
-        [ body('cid', 'Invalid cookbook ID').isMongoId(), body('rid', 'Invalid recipe ID').isMongoId() ],
-        removeRecipe
-    )
-    .post(
-        '/share',
-        needsAuth,
-        [
-            body('cid', 'Invalid cookbook ID').isMongoId(),
-            body('uid', 'Invalid user ID').isMongoId(),
-            body('status', 'Invalid sharing status').custom(
-                (value, { req: { body: { status: { requested, invited, accepted, rejected } } } }) =>
-                    [ requested, invited, accepted, rejected ].map(Boolean).reduce((sum, val) => (sum += val)) === 1
-            )
-        ],
-        addSharing
-    )
-    .put(
-        '/share',
-        needsAuth,
-        [
-            body('cid', 'Invalid cookbook ID').isMongoId(),
-            body('uid', 'Invalid user ID').isMongoId(),
-            body('status', 'Invalid sharing status').custom(
-                (value, { req: { body: { status: { requested, invited, accepted, rejected } } } }) =>
-                    [ requested, invited, accepted, rejected ].map(Boolean).reduce((sum, val) => (sum += val)) === 1
-            )
-        ],
-        editSharing
-    )
-    .delete(
-        '/share',
-        needsAuth,
-        [ body('cid', 'Invalid cookbook ID').isMongoId(), body('uid', 'Invalid user ID').isMongoId() ],
-        removeSharing
-    )
-    .post(
-        '/comment',
-        needsAuth,
-        [
-            body('cid', 'Invalid cookbook ID').isMongoId(),
-            body('rid', 'Invalid recipe ID').isMongoId(),
-            body('message', 'Invalid message')
-                .isString()
-                .trim()
-                .isLength({ max: 256 })
-                .withMessage('Comment cannot be longer than 256 characters.')
-        ],
-        addComment
-    )
-    .put(
-        '/comment',
-        needsAuth,
-        [
-            body('cid', 'Invalid cookbook ID').isMongoId(),
-            body('mid', 'Invalid comment ID').isMongoId(),
-            body('message', 'Invalid message')
-                .isString()
-                .trim()
-                .isLength({ max: 256 })
-                .withMessage('Comment cannot be longer than 256 characters.')
-        ],
-        editComment
-    )
-    .delete(
-        '/comment',
-        needsAuth,
-        [ body('cid', 'Invalid cookbook ID').isMongoId(), body('mid', 'Invalid comment ID').isMongoId() ],
-        deleteComment
-    )
     .get('/:cid', needsAuth, [ param('cid', 'Invalid cookbook ID').isMongoId() ], getCookbook)
-    .get(
-        '/:cid/comment',
-        needsAuth,
-        [ param('cid', 'Invalid cookbook ID').isMongoId(), query('rid', 'Invalid recipe ID').isMongoId() ],
-        getComments
-    )
-    .get('/:cid/share', needsAuth, [ param('cid', 'Invalid cookbook ID').isMongoId() ], getSharing)
     .post(
         '/',
         needsAuth,
@@ -124,10 +40,10 @@ router
         createCookbook
     )
     .put(
-        '/',
+        '/:cid',
         needsAuth,
         [
-            body('cid', 'Invalid cookbook ID').isMongoId(),
+            param('cid', 'Invalid cookbook ID').isMongoId(),
             body('title', 'Invalid title')
                 .isString()
                 .trim()
@@ -136,6 +52,99 @@ router
         ],
         editCookbook
     )
-    .delete('/', needsAuth, [ body('cid', 'Invalid cookbook ID').isMongoId() ], deleteCookbook)
+    .delete('/:cid', needsAuth, [ param('cid', 'Invalid cookbook ID').isMongoId() ], deleteCookbook)
+    // Recipes
+    .post(
+        '/:cid/recipe/:rid',
+        needsAuth,
+        [ param('cid', 'Invalid cookbook ID').isMongoId(), param('rid', 'Invalid recipe ID').isMongoId() ],
+        addRecipe
+    )
+    .delete(
+        '/:cid/recipe/:rid',
+        needsAuth,
+        [ param('cid', 'Invalid cookbook ID').isMongoId(), param('rid', 'Invalid recipe ID').isMongoId() ],
+        removeRecipe
+    )
+    // Comments
+    .get(
+        '/:cid/recipe/:rid/comment',
+        needsAuth,
+        [ param('cid', 'Invalid cookbook ID').isMongoId(), param('rid', 'Invalid recipe ID').isMongoId() ],
+        getComments
+    )
+    .post(
+        '/:cid/recipe/:rid/comment',
+        needsAuth,
+        [
+            param('cid', 'Invalid cookbook ID').isMongoId(),
+            param('rid', 'Invalid recipe ID').isMongoId(),
+            body('message', 'Invalid message')
+                .isString()
+                .trim()
+                .isLength({ max: 256 })
+                .withMessage('Comment cannot be longer than 256 characters.')
+        ],
+        addComment
+    )
+    .put(
+        '/:cid/recipe/:rid/comment/:mid',
+        needsAuth,
+        [
+            param('cid', 'Invalid cookbook ID').isMongoId(),
+            param('rid', 'Invalid recipe ID').isMongoId(),
+            param('mid', 'Invalid comment ID').isMongoId(),
+            body('message', 'Invalid message')
+                .isString()
+                .trim()
+                .isLength({ max: 256 })
+                .withMessage('Comment cannot be longer than 256 characters.')
+        ],
+        editComment
+    )
+    .delete(
+        '/:cid/recipe/:rid/comment/:mid',
+        needsAuth,
+        [
+            param('cid', 'Invalid cookbook ID').isMongoId(),
+            param('rid', 'Invalid recipe ID').isMongoId(),
+            param('mid', 'Invalid comment ID').isMongoId()
+        ],
+        deleteComment
+    )
+    // Sharing
+    .get('/:cid/share', needsAuth, [ param('cid', 'Invalid cookbook ID').isMongoId() ], getSharing)
+    .post(
+        '/:cid/share/:uid',
+        needsAuth,
+        [
+            param('cid', 'Invalid cookbook ID').isMongoId(),
+            param('uid', 'Invalid user ID').isMongoId(),
+            body('status', 'Invalid sharing status').custom(
+                (value, { req: { body: { status: { requested, invited, accepted, rejected } } } }) =>
+                    [ requested, invited, accepted, rejected ].map(Boolean).reduce((sum, val) => (sum += val)) === 1
+            )
+        ],
+        addSharing
+    )
+    .put(
+        '/:cid/share/:uid',
+        needsAuth,
+        [
+            param('cid', 'Invalid cookbook ID').isMongoId(),
+            param('uid', 'Invalid user ID').isMongoId(),
+            body('status', 'Invalid sharing status').custom(
+                (value, { req: { body: { status: { requested, invited, accepted, rejected } } } }) =>
+                    [ requested, invited, accepted, rejected ].map(Boolean).reduce((sum, val) => (sum += val)) === 1
+            )
+        ],
+        editSharing
+    )
+    .delete(
+        '/:cid/share/:uid',
+        needsAuth,
+        [ param('cid', 'Invalid cookbook ID').isMongoId(), param('uid', 'Invalid user ID').isMongoId() ],
+        removeSharing
+    )
 
 module.exports = router
