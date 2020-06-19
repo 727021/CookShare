@@ -91,14 +91,20 @@ app
         res.status(500).send({ error: process.env.NODE_ENV === 'development' ? err.message : 'Server Error' })
     })
 
-mongoose
-    .connect(process.env.MONGODB_URL, mongooseOptions)
-    .then(({ connections: [ { name: name } ] }) => {
-        console.log(`Connected to MongoDB database '${name}'`)
-        app.listen(PORT, () => {
-            console.log('Listening on port', PORT)
-            startAll()
-            console.log('All cron jobs started')
+const startServer = () => {
+    mongoose
+        .connect(process.env.MONGODB_URL, mongooseOptions)
+        .then(({ connections: [ { name: name } ] }) => {
+            console.log(`Connected to MongoDB database '${name}'`)
+            app.listen(PORT, () => {
+                console.log('Listening on port', PORT)
+                startAll()
+                console.log('All cron jobs started')
+            })
         })
-    })
-    .catch(console.error)
+        .catch(err => {
+            console.log('Database connection failed. Retrying...')
+            startServer()
+        })
+}
+startServer()
