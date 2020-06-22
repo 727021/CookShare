@@ -1,13 +1,6 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import Home from '../views/Home'
-import Profile from '../views/Profile'
-import Recipes from '../views/Recipes'
-import Recipe from '../views/Recipe'
-import Cookbooks from '../views/Cookbooks'
-import Cookbook from '../views/Cookbook'
-import _500 from '../views/500'
-import _404 from '../views/404'
+import { Home, Profile, Recipes, Recipe, Cookbooks, Cookbook, _500, _404 } from '../views/AllViews'
 
 Vue.use(VueRouter)
 
@@ -15,35 +8,47 @@ const routes = [
     {
         path: '/',
         name: 'Home',
-        component: Home,
-        meta: {
-            title: 'Home'
-        }
+        component: Home
     },
     {
         path: '/profile',
         name: 'Profile',
-        component: Profile
+        component: Profile,
+        meta: {
+            needsAuth: true
+        }
     },
     {
         path: '/recipes',
         name: 'Recipes',
-        component: Recipes
+        component: Recipes,
+        meta: {
+            needsAuth: true
+        }
     },
     {
         path: '/recipes/:rid',
         name: 'Recipe',
-        component: Recipe
+        component: Recipe,
+        meta: {
+            needsAuth: true
+        }
     },
     {
         path: '/cookbooks',
         name: 'Cookbooks',
-        component: Cookbooks
+        component: Cookbooks,
+        meta: {
+            needsAuth: true
+        }
     },
     {
         path: '/cookbooks/:cid',
         name: 'Cookbook',
-        component: Cookbook
+        component: Cookbook,
+        meta: {
+            needsAuth: true
+        }
     },
     {
         path: '/500',
@@ -62,8 +67,12 @@ const router = new VueRouter({
 })
 
 router.beforeEach((to, from, next) => {
-    document.title = (to.meta.title || to.name ? (to.meta.title || to.name) + ' - ' : '') + 'CookShare'
-    next()
+    if (to.meta.needsAuth && !localStorage.getItem('token')) next(new Error('Not logged in'))
+    else next()
+})
+
+router.afterEach((to, from) => {
+    document.title = to.name + ' - CookShare'
 })
 
 export default router

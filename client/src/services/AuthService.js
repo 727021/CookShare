@@ -1,25 +1,21 @@
-import axios from 'axios'
 import { isEmail } from 'validator'
 
-// TODO research token auth, maybe use Vuex for state management
+import Send from './RequestSender'
 
 const url = '/api/auth'
 
-const login = (username, password) => {
-    const data = isEmail(username || '') ? { email: username, password } : { username, password }
-    return axios
-        .put(url, data)
-        .then(({ data }) => {
-            return Promise.resolve({ status: 200, data })
-        })
-        .catch(({ response: { status, data } }) => {
-            console.log(status, data)
-            return Promise.resolve({ status, data })
-        })
-}
-const register = () => {}
-const logout = () => {}
-
 export default {
-    login
+    login: (username, password) => {
+        const data = isEmail(username || '') ? { email: username, password } : { username, password }
+        return Send.put(url, data)
+            .then(({ data }) => Promise.resolve({ status: 200, data }))
+            .catch(({ response: { status, data } }) => Promise.resolve({ status, data }))
+    },
+
+    register: (username, email, firstname, lastname, password, confirm) =>
+        Send.post(url, { username, email, firstname, lastname, password, confirm })
+            .then(({ data }) => Promise.resolve({ status: 201, data }))
+            .catch(({ response: { status, data } }) => Promise.resolve({ status, data })),
+
+    logout: () => Send.delete(url).then(() => Promise.resolve()).catch(() => Promise.resolve())
 }

@@ -7,6 +7,6 @@
 
 <script>
 export default {
-    name: "500"
+    name: "ServerError"
 };
 </script>

@@ -56,6 +56,11 @@ export default {
     name: "Header",
     components: {
         NavLink
+    },
+    methods: {
+        loggedIn() {
+            return Boolean(localStorage.getItem("token"));
+        }
     }
 };
 </script>

@@ -17,8 +17,11 @@
                                         class="close"
                                         data-dismiss="modal"
                                         aria-label="Close"
+                                        @click="hideLogin"
                                     >
-                                        <span aria-hidden="true" @click="hideLogin">&times;</span>
+                                        <span aria-hidden="true">
+                                            <i class="fas fa-times"></i>
+                                        </span>
                                     </button>
                                 </div>
                                 <form @submit.prevent="login">
@@ -80,8 +83,11 @@
                                         class="close"
                                         data-dismiss="modal"
                                         aria-label="Close"
+                                        @click="hideRegister"
                                     >
-                                        <span aria-hidden="true" @click="hideRegister">&times;</span>
+                                        <span aria-hidden="true">
+                                            <i class="fas fa-times"></i>
+                                        </span>
                                     </button>
                                 </div>
                                 <form @submit.prevent="register">
@@ -200,7 +206,9 @@ import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
 import { isEmail } from "validator";
 import axios from "axios";
-import Auth from "./services/AuthService";
+import { decode } from "jsonwebtoken";
+import AuthService from "./services/AuthService";
+import UserService from "./services/UserService";
 
 export default {
     name: "app",
@@ -269,11 +277,12 @@ export default {
             }
         },
         login() {
-            Auth.login(this.loginForm.username, this.loginForm.password)
+            AuthService.login(this.loginForm.username, this.loginForm.password)
                 .then(({ status, data }) => {
                     switch (status) {
                         case 200:
-                            this.user = data;
+                            localStorage.setItem("token", data.token);
+                            this.user = decode(data.token);
                             this.hideLogin();
                             break;
                         case 401:
@@ -291,27 +300,28 @@ export default {
                             break;
                     }
                 })
-                // TODO display 500 page on error
-                .catch(console.error);
+                .catch(err => {
+                    console.error(err);
+                    this.hideLogin();
+                    this._500();
+                });
         },
         register() {
-            const data = {
-                username: this.registerForm.username.value,
-                email: this.registerForm.email.value,
-                firstname: this.registerForm.firstname.value,
-                lastname: this.registerForm.lastname.value,
-                password: this.registerForm.password.value,
-                confirm: this.registerForm.confirm.value
-            };
-
-            axios
-                .post("/api/auth", data)
-                .then(({ data }) => {
-                    this.showLogin();
-                    this.loginForm.username = data.username;
-                })
-                .catch(({ response: { status, data } }) => {
+            AuthService.register(
+                this.registerForm.username.value,
+                this.registerForm.email.value,
+                this.registerForm.firstname.value,
+                this.registerForm.lastname.value,
+                this.registerForm.password.value,
+                this.registerForm.confirm.value
+            )
+                .then(({ status, data }) => {
+                    console.log(status, data);
                     switch (status) {
+                        case 201:
+                            this.showLogin();
+                            this.loginForm.username = data.username;
+                            break;
                         case 401:
                             this.hideRegister();
                             this.getUser();
@@ -330,31 +340,57 @@ export default {
                             this._500();
                             break;
                     }
+                })
+                .catch(err => {
+                    console.error(err);
+                    this.hideLogin();
+                    this._500();
                 });
         },
         logout() {
-            axios
-                .delete("/api/auth")
-                .then(res => {})
-                .catch(err => {})
+            AuthService.logout()
+                .catch(err => {
+                    console.error(err);
+                    this.hideLogin();
+                    this._500();
+                })
                 .finally(() => {
                     this.user = undefined;
+                    localStorage.removeItem("token");
                     this.$router.push("/");
                 });
         },
         getUser() {
-            axios
-                .get("/api/user")
-                .then(({ data }) => {
-                    this.user = data;
+            UserService.getUser()
+                .then(({ status, data }) => {
+                    switch (status) {
+                        case 200:
+                            this.user = data;
+                            break;
+                        default:
+                            this.hideRegister();
+                            this._500();
+                            break;
+                    }
                 })
-                .catch(({ response: { status, data } }) => {
-                    console.log(status, data);
+                .catch(err => {
+                    console.error(err);
+                    this.hideLogin();
+                    this._500();
                 });
         },
         _500() {
             this.$router.push("/500");
         }
+    },
+    mounted() {
+        this.getUser();
+
+        this.$router.onError(err => {
+            if (err.message === "Not logged in") {
+                this.showLogin();
+            }
+        });
     }
 };
 </script>
