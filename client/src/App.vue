@@ -367,6 +367,8 @@ export default {
                         case 200:
                             this.user = data;
                             break;
+                        case 401:
+                            break;
                         default:
                             this.hideRegister();
                             this._500();
