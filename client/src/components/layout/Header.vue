@@ -14,15 +14,20 @@
             </button>
             <div class="collapse navbar-collapse text-center text-lg-left" id="navbarNav">
                 <span class="navbar-brand">CookShare</span>
-                <hr class="d-lg-none">
+                <hr class="d-lg-none" />
                 <ul class="navbar-nav mr-auto">
-                    <NavLink page="/" />
-                    <NavLink page="/about" />
+                    <NavLink page="/" exact="true" />
+                    <NavLink page="/recipes" />
+                    <NavLink page="/cookbooks" />
                 </ul>
-                <hr class="d-lg-none">
+                <hr class="d-lg-none" />
                 <ul v-if="!this.$parent.user" class="navbar-nav">
                     <li class="nav-item">
-                        <a @click.prevent="$emit('show-login')" href="/login" class="nav-link">Log In</a>
+                        <a
+                            @click.prevent="$emit('show-login')"
+                            href="/login"
+                            class="nav-link"
+                        >Log In</a>
                     </li>
                     <li class="navbar-text d-none d-lg-inline-block">or</li>
                     <li class="nav-item">
@@ -34,13 +39,7 @@
                     </li>
                 </ul>
                 <ul v-else class="navbar-nav">
-                    <li class="nav-item">
-                        <a
-                            @click.prevent="void(0)"
-                            href="#"
-                            class="nav-link"
-                        >{{this.$parent.user.username}}</a>
-                    </li>
+                    <NavLink page="/profile" exact="true" :text="this.$parent.user.username" />
                     <li class="nav-item">
                         <a @click.prevent="$emit('logout')" href="#" class="nav-link">Log Out</a>
                     </li>

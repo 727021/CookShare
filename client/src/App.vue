@@ -200,6 +200,7 @@ import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
 import { isEmail } from "validator";
 import axios from "axios";
+import Auth from "./services/AuthService";
 
 export default {
     name: "app",
@@ -268,37 +269,30 @@ export default {
             }
         },
         login() {
-            const formData = isEmail(this.loginForm.username || "")
-                ? {
-                      email: this.loginForm.username,
-                      password: this.loginForm.password
-                  }
-                : {
-                      username: this.loginForm.username,
-                      password: this.loginForm.password
-                  };
-            console.log(formData);
-            axios
-                .put("/api/auth", formData)
-                .then(({ data }) => {
-                    this.user = data;
-                    this.hideLogin();
-                })
-                .catch(({ response: { status, data } }) => {
+            Auth.login(this.loginForm.username, this.loginForm.password)
+                .then(({ status, data }) => {
                     switch (status) {
+                        case 200:
+                            this.user = data;
+                            this.hideLogin();
+                            break;
                         case 401:
                             this.hideLogin();
                             this.getUser();
                             break;
                         case 422:
-                            this.loginForm.error = data.error;
+                            console.log(data);
+                            this.loginForm.error =
+                                data.error || "Invalid Login";
                             break;
                         default:
                             this.hideLogin();
                             this._500();
                             break;
                     }
-                });
+                })
+                // TODO display 500 page on error
+                .catch(console.error);
         },
         register() {
             const data = {
