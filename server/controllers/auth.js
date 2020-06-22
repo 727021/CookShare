@@ -1,8 +1,9 @@
 const { validationResult } = require('express-validator')
 const { hash, compare } = require('bcrypt')
+const { sign } = require('jsonwebtoken')
 
 const User = require('../models/user')
-const { SALT_ROUNDS } = require('../util/constants')
+const { SALT_ROUNDS, JWT_EXPIRES_IN } = require('../util/constants')
 
 exports.register = async (req, res, next) => {
     const errors = validationResult(req)
@@ -35,35 +36,39 @@ exports.login = async (req, res, next) => {
     const { username, email, password } = req.body
 
     try {
-        const user = await User.findOne(username ? { username } : { email }, 'password')
+        const user = await User.findOne(username ? { username } : { email }, '-authToken')
         if (!user) return res.status(401).send({ error: 'Invalid login' })
         const same = await compare(password, user.password)
         if (!same) return res.status(401).send({ error: 'Invalid login' })
-        const loggedInUser = await User.findByIdAndUpdate(user._id, { seen: Date.now() })
-        if (!loggedInUser) return res.status(401).send({ error: 'Invalid login' })
-        req.session.user = {
-            _id: loggedInUser._id,
-            username: loggedInUser.username,
-            email: loggedInUser.email,
-            name: loggedInUser.name,
-            joined: loggedInUser.joined,
-            seen: loggedInUser.seen,
-            admin: loggedInUser.admin
-        }
-        req.session.save(err => {
-            if (err) return next(err)
-            res.status(200).send(req.session.user)
-        })
+        user.seen = Date.now()
+        const token = await sign(
+            {
+                _id: user._id,
+                username: user.username,
+                email: user.email,
+                name: user.name,
+                joined: user.joined,
+                seen: user.seen,
+                admin: user.admin
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: JWT_EXPIRES_IN }
+        )
+        user.authToken = token
+        await user.save()
+        res.status(200).send({ token })
     } catch (err) {
         next(err)
     }
 }
 
-exports.logout = (req, res, next) => {
-    req.session.destroy(err => {
-        if (err) return next(err)
+exports.logout = async (req, res, next) => {
+    try {
+        await User.findOneAndUpdate({ authToken: req.token }, { authToken: undefined })
         res.status(204).end()
-    })
+    } catch (err) {
+        next(err)
+    }
 }
 
 // TODO Implement password resets

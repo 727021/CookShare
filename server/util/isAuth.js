@@ -1,4 +1,4 @@
 module.exports = {
-    isAuth: req => Boolean(req.session.user),
-    isAdmin: req => Boolean(req.session.user && req.session.user.admin)
+    isAuth: req => Boolean(req.user),
+    isAdmin: req => Boolean(req.user && req.user.admin)
 }

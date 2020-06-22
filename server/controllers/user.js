@@ -6,7 +6,7 @@ const { SALT_ROUNDS } = require('../util/constants')
 const { isAdmin } = require('../util/isAuth')
 
 exports.getSelf = (req, res, next) => {
-    res.send(req.session.user)
+    res.send({ ...req.user })
 }
 
 exports.changePassword = async (req, res, next) => {
@@ -97,17 +97,14 @@ exports.putAdmin = async (req, res, next) => {
     try {
         const user = await User.findByIdAndUpdate(uid, { admin })
         if (!user) return res.status(409).send({ error: 'User not found' })
-        req.session.user.admin = user.admin
-        req.session.save(err => {
-            if (err) return next(err)
-            res.status(200).send({
-                _id: user._id,
-                email: user.email,
-                username: user.username,
-                joined: user.joined,
-                seen: user.seen,
-                admin: user.admin
-            })
+        if (err) return next(err)
+        res.status(200).send({
+            _id: user._id,
+            email: user.email,
+            username: user.username,
+            joined: user.joined,
+            seen: user.seen,
+            admin: user.admin
         })
     } catch (err) {
         next(err)
@@ -141,10 +138,7 @@ exports.deleteUser = async (req, res, next) => {
         const same = await compare(password, user.password)
         if (!same) return res.status(401).send({ error: 'Invalid Login' })
         await User.findByIdAndDelete(user._id)
-        req.session.destroy(err => {
-            if (err) return next(err)
-            res.status(204).end()
-        })
+        res.status(204).end()
     } catch (err) {
         next(err)
     }

@@ -44,13 +44,15 @@ const userSchema = new Schema({
     resetTokenExpiration: Date,
     favorites: [
         {
-            recipe: {
-                type: ObjectId,
-                required: true,
-                ref: 'Recipe'
-            }
+            type: ObjectId,
+            required: true,
+            ref: 'Recipe'
         }
-    ]
+    ],
+    authToken: {
+        type: String,
+        required: false
+    }
 })
 
 module.exports = model('User', userSchema)

@@ -1,27 +1,30 @@
+const { promisify } = require('util')
 const express = require('express')
 const bodyParser = require('body-parser')
 const path = require('path')
 const morgan = require('morgan')
 const cors = require('cors')()
 const mongoose = require('mongoose')
-const session = require('express-session')
-const MongoDBStore = require('connect-mongodb-session')(session)
+// const session = require('express-session')
+// const MongoDBStore = require('connect-mongodb-session')(session)
 const csrf = require('csurf')()
-const flash = require('connect-flash')()
+// const flash = require('connect-flash')()
 const multer = require('multer')
-const { startAll } = require('./util/cron')
+const verify = promisify(require('jsonwebtoken').verify)
+const bearer = require('express-bearer-token')()
 require('dotenv').config()
 
+const { startAll } = require('./util/cron')
 const User = require('./models/user')
 
 const PORT = process.env.PORT || 3000
 
 const app = express()
 
-const store = new MongoDBStore({
-    uri: process.env.MONGODB_URL,
-    collection: 'sessions'
-})
+// const store = new MongoDBStore({
+//     uri: process.env.MONGODB_URL,
+//     collection: 'sessions'
+// })
 
 const originWhitelist = [ 'https://cookshare.herokuapp.com/', 'http://localhost:8080' ]
 const corsOptions = {
@@ -40,12 +43,12 @@ const mongooseOptions = {
     family: 4
 }
 
-const sessionOptions = {
-    secret: process.env.SESS_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    store: store
-}
+// const sessionOptions = {
+//     secret: process.env.SESS_SECRET,
+//     resave: false,
+//     saveUninitialized: false,
+//     store: store
+// }
 
 const multerOptions = {
     storage: multer.diskStorage({
@@ -69,13 +72,14 @@ app
     .use(bodyParser.urlencoded({ extended: false }))
     .use(bodyParser.json())
     .use(multer(multerOptions).array('images'))
-    .use(session(sessionOptions))
+    // .use(session(sessionOptions))
     // .use(csrf)
-    .use(flash)
+    .use(bearer)
     .use(async (req, res, next) => {
-        if (req.session.user) {
+        if (req.token) {
             try {
-                req.user = await User.findById(req.session.user._id)
+                const { _id } = await verify(req.token, process.env.JWT_SECRET)
+                if (_id) req.user = await User.findOne({ _id, authToken: req.token })
                 next()
             } catch (err) {
                 next(err)
