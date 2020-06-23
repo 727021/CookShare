@@ -202,11 +202,12 @@
 </template>
 
 <script>
+import { isEmail } from "validator";
+import { decode } from "jsonwebtoken";
+
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
-import { isEmail } from "validator";
-import axios from "axios";
-import { decode } from "jsonwebtoken";
+
 import AuthService from "./services/AuthService";
 import UserService from "./services/UserService";
 
@@ -218,6 +219,7 @@ export default {
     },
     data() {
         return {
+            redirect: undefined,
             user: undefined,
             loginForm: {
                 username: "",
@@ -284,6 +286,10 @@ export default {
                             localStorage.setItem("token", data.token);
                             this.user = decode(data.token);
                             this.hideLogin();
+                            if (this.redirect) {
+                                this.$router.push(this.redirect);
+                                this.redirect = undefined;
+                            }
                             break;
                         case 401:
                             this.hideLogin();
@@ -357,7 +363,8 @@ export default {
                 .finally(() => {
                     this.user = undefined;
                     localStorage.removeItem("token");
-                    this.$router.push("/");
+                    if (this.$router.currentRoute.path !== "/")
+                        this.$router.push("/");
                 });
         },
         getUser() {
@@ -368,6 +375,8 @@ export default {
                             this.user = data;
                             break;
                         case 401:
+                            this.user = undefined;
+                            localStorage.removeItem("token");
                             break;
                         default:
                             this.hideRegister();
@@ -389,7 +398,8 @@ export default {
         this.getUser();
 
         this.$router.onError(err => {
-            if (err.message === "Not logged in") {
+            if (err.name === "NotLoggedIn") {
+                this.redirect = err.message;
                 this.showLogin();
             }
         });

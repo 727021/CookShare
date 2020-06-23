@@ -6,7 +6,7 @@ const { SALT_ROUNDS } = require('../util/constants')
 const { isAdmin } = require('../util/isAuth')
 
 exports.getSelf = (req, res, next) => {
-    res.send({ ...req.user })
+    res.send(req.user)
 }
 
 exports.changePassword = async (req, res, next) => {

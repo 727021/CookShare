@@ -82,7 +82,13 @@ app
                 if (_id) req.user = await User.findOne({ _id, authToken: req.token })
                 next()
             } catch (err) {
-                next(err)
+                switch (err.name) {
+                    case 'TokenExpiredError':
+                        next()
+                        break
+                    default:
+                        next(err)
+                }
             }
         } else next()
     })

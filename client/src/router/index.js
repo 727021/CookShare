@@ -67,8 +67,12 @@ const router = new VueRouter({
 })
 
 router.beforeEach((to, from, next) => {
-    if (to.meta.needsAuth && !localStorage.getItem('token')) next(new Error('Not logged in'))
-    else next()
+    if (to.meta.needsAuth && !localStorage.getItem('token')) {
+        const err = new Error()
+        err.message = to.path
+        err.name = 'NotLoggedIn'
+        next(err)
+    } else next()
 })
 
 router.afterEach((to, from) => {
