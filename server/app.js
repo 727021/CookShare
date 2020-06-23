@@ -3,12 +3,7 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const path = require('path')
 const morgan = require('morgan')
-const cors = require('cors')()
 const mongoose = require('mongoose')
-// const session = require('express-session')
-// const MongoDBStore = require('connect-mongodb-session')(session)
-const csrf = require('csurf')()
-// const flash = require('connect-flash')()
 const multer = require('multer')
 const verify = promisify(require('jsonwebtoken').verify)
 const bearer = require('express-bearer-token')()
@@ -21,20 +16,6 @@ const PORT = process.env.PORT || 3000
 
 const app = express()
 
-// const store = new MongoDBStore({
-//     uri: process.env.MONGODB_URL,
-//     collection: 'sessions'
-// })
-
-const originWhitelist = [ 'https://cookshare.herokuapp.com/', 'http://localhost:8080' ]
-const corsOptions = {
-    origin: function(origin, callback) {
-        if (originWhitelist.indexOf(origin) !== -1) callback(null, true)
-        else callback(new Error('Not allowed by CORS'))
-    },
-    optionsSuccessStatus: 200
-}
-
 const mongooseOptions = {
     useUnifiedTopology: true,
     useNewUrlParser: true,
@@ -42,13 +23,6 @@ const mongooseOptions = {
     useFindAndModify: false,
     family: 4
 }
-
-// const sessionOptions = {
-//     secret: process.env.SESS_SECRET,
-//     resave: false,
-//     saveUninitialized: false,
-//     store: store
-// }
 
 const multerOptions = {
     storage: multer.diskStorage({
@@ -68,12 +42,9 @@ app
     .use(morgan('dev'))
     .use(express.static(path.join(__dirname, 'public')))
     .use('/uploads', express.static(path.join(__dirname, 'uploads')))
-    .use(cors)
     .use(bodyParser.urlencoded({ extended: false }))
     .use(bodyParser.json())
     .use(multer(multerOptions).array('images'))
-    // .use(session(sessionOptions))
-    // .use(csrf)
     .use(bearer)
     .use(async (req, res, next) => {
         if (req.token) {
@@ -108,8 +79,8 @@ const startServer = () => {
             console.log(`Connected to MongoDB database '${name}'`)
             app.listen(PORT, () => {
                 console.log('Listening on port', PORT)
-                startAll()
-                console.log('All cron jobs started')
+                const numJobs = startAll()
+                console.log(`All cron jobs started (${numJobs})`)
             })
         })
         .catch(err => {
