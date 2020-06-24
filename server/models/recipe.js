@@ -1,6 +1,7 @@
 const { Schema, Schema: { Types: { ObjectId } }, model } = require('mongoose')
 const { exists } = require('../util/units')
 
+// TODO Add fields for `prep` and `cook` that store a number of minutes
 const recipeSchema = new Schema({
     author: {
         type: ObjectId,

@@ -7,6 +7,7 @@ const mongoose = require('mongoose')
 const multer = require('multer')
 const verify = promisify(require('jsonwebtoken').verify)
 const bearer = require('express-bearer-token')()
+const { v4 } = require('uuid')
 require('dotenv').config()
 
 const { startAll } = require('./util/cron')
@@ -30,7 +31,7 @@ const multerOptions = {
             cb(null, 'uploads')
         },
         filename: (req, file, cb) => {
-            cb(null, new Date().toISOString() + '-' + file.originalname)
+            cb(null, v4() + '-' + file.originalname)
         }
     }),
     fileFilter: (req, file, cb) => {

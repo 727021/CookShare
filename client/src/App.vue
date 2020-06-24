@@ -408,6 +408,11 @@ export default {
 </script>
 
 <style>
+body {
+    margin-top: 4rem;
+    margin-bottom: 4rem;
+}
+
 .modal-mask {
     position: fixed;
     z-index: 9998;
