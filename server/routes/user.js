@@ -32,8 +32,8 @@ router
     )
     .get('/all', needsAuth, getAll)
     .get('/favorites', needsAuth, getFavorites)
-    .post('/favorites', needsAuth, [ body('rid', 'Invalid recipe ID').isMongoId() ], postFavorites)
-    .delete('/favorites', needsAuth, [ body('rid', 'Invalid recipe ID').isMongoId() ], deleteFavorites)
+    .post('/favorites/:rid', needsAuth, [ param('rid', 'Invalid recipe ID').isMongoId() ], postFavorites)
+    .delete('/favorites/:rid', needsAuth, [ param('rid', 'Invalid recipe ID').isMongoId() ], deleteFavorites)
     .put('/admin', needsAdmin, [ body('uid', 'Invalid user ID').isMongoId(), body('admin').toBoolean() ], putAdmin)
     .get('/:uid', needsAuth, [ param('uid', 'Invalid user ID').isMongoId() ], getUser)
     .delete(

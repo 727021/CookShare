@@ -10,7 +10,8 @@ const recipeSchema = new Schema({
     },
     title: {
         type: String,
-        required: true
+        required: true,
+        maxlength: 64
     },
     description: {
         type: String,
@@ -28,7 +29,7 @@ const recipeSchema = new Schema({
         },
         units: {
             type: String,
-            required: true,
+            required: false,
             validate: x => exists(x)
         }
     },
@@ -36,7 +37,8 @@ const recipeSchema = new Schema({
         {
             name: {
                 type: String,
-                required: true
+                required: true,
+                maxlength: 64
             },
             amount: {
                 type: Number,
@@ -44,13 +46,18 @@ const recipeSchema = new Schema({
             },
             units: {
                 type: String,
-                required: true,
+                required: false,
                 validate: x => exists(x)
             }
         }
     ],
-    steps: [ String ],
-    images: [ String ]
+    steps: [
+        {
+            type: String,
+            maxlength: 64
+        }
+    ],
+    images: String
 })
 
 module.exports = model('Recipe', recipeSchema)

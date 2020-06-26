@@ -42,8 +42,6 @@ export class Unit {
         this.fromBase = fromBase
 
         this.amount = undefined
-
-        UNITS.push(this)
     }
 
     to(unit) {

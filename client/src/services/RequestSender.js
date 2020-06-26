@@ -12,5 +12,10 @@ export default {
 
     put: (url, body) => axios.put(url, body, bindToken()),
 
-    delete: url => axios.delete(url, bindToken())
+    delete: url => axios.delete(url, bindToken()),
+
+    resolve: (promise, success) =>
+        promise
+            .then(({ data }) => Promise.resolve({ status: success || 200, data }))
+            .catch(({ response: { status, data } }) => Promise.resolve({ status, data }))
 }

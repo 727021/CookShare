@@ -37,10 +37,6 @@ exports.getRecipe = async (req, res, next) => {
         if (!(req.user._id.toString() === recipe.author._id.toString() || isAdmin(req)))
             return res.status(401).send({ error: 'Recipe not found.' })
 
-        recipe.ingredients.forEach(i => {
-            i.units = Unit.find(i.units)
-        })
-        recipe.serving.units = Unit.find(recipe.serving.units)
         res.status(200).send(recipe)
     } catch (err) {
         next(err)
@@ -51,9 +47,9 @@ exports.createRecipe = async (req, res, next) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) return res.status(422).send({ errors: errors.array() })
 
-    const { title, description, serving, ingredients, steps } = req.body
+    const { title, description, serving, ingredients, steps, image } = req.body
     // TODO Make sure image uploads work
-    const images = req.files ? req.files.map(f => f.filename) : []
+    // const image = req.file
 
     try {
         const recipe = await new Recipe({
@@ -63,7 +59,7 @@ exports.createRecipe = async (req, res, next) => {
             serving,
             ingredients,
             steps,
-            images
+            image
         }).save()
 
         if (!recipe) return res.status(409).send({ error: 'Failed to create recipe.' })
@@ -78,9 +74,9 @@ exports.editRecipe = async (req, res, next) => {
     if (!errors.isEmpty()) return res.status(422).send({ errors: errors.array() })
 
     const { rid } = req.params
-    const { title, description, serving, ingredients, steps } = req.body
+    const { title, description, serving, ingredients, steps, image } = req.body
     // TODO Make sure image uploads work
-    const images = req.files ? req.files.map(f => f.filename) : []
+    // const image = req.file
 
     try {
         const recipe = await Recipe.findById(rid)
@@ -94,7 +90,7 @@ exports.editRecipe = async (req, res, next) => {
         recipe.serving = serving
         recipe.ingredients = ingredients
         recipe.steps = steps
-        recipe.images = images
+        recipe.image = image
 
         const updatedRecipe = await recipe.save()
 

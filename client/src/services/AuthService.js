@@ -7,15 +7,11 @@ const url = '/api/auth'
 export default {
     login: (username, password) => {
         const data = isEmail(username || '') ? { email: username, password } : { username, password }
-        return Send.put(url, data)
-            .then(({ data }) => Promise.resolve({ status: 200, data }))
-            .catch(({ response: { status, data } }) => Promise.resolve({ status, data }))
+        return Send.resolve(Send.put(url, data))
     },
 
     register: (username, email, firstname, lastname, password, confirm) =>
-        Send.post(url, { username, email, firstname, lastname, password, confirm })
-            .then(({ data }) => Promise.resolve({ status: 201, data }))
-            .catch(({ response: { status, data } }) => Promise.resolve({ status, data })),
+        Send.resolve(Send.post(url, { username, email, firstname, lastname, password, confirm }), 201),
 
     logout: () => Send.delete(url).then(() => Promise.resolve()).catch(() => Promise.resolve())
 }

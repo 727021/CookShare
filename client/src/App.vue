@@ -284,12 +284,15 @@ export default {
                     switch (status) {
                         case 200:
                             localStorage.setItem("token", data.token);
-                            this.user = decode(data.token);
-                            this.hideLogin();
-                            if (this.redirect) {
-                                this.$router.push(this.redirect);
-                                this.redirect = undefined;
-                            }
+                            this.getUser()
+                                .then(() => {
+                                    this.hideLogin();
+                                    if (this.redirect) {
+                                        this.$router.push(this.redirect);
+                                        this.redirect = undefined;
+                                    }
+                                })
+                                .catch(err => {});
                             break;
                         case 401:
                             this.hideLogin();
@@ -368,18 +371,18 @@ export default {
                 });
         },
         getUser() {
-            UserService.getUser()
+            return UserService.getUser()
                 .then(({ status, data }) => {
                     switch (status) {
                         case 200:
                             this.user = data;
                             break;
                         case 401:
-                            this.user = undefined;
-                            localStorage.removeItem("token");
+                            this._401();
                             break;
                         default:
                             this.hideRegister();
+                            this.hideLogin();
                             this._500();
                             break;
                     }
@@ -392,6 +395,10 @@ export default {
         },
         _500() {
             this.$router.push("/500");
+        },
+        _401() {
+            this.user = undefined;
+            localStorage.removeItem("token");
         }
     },
     mounted() {

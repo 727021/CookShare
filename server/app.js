@@ -4,7 +4,7 @@ const bodyParser = require('body-parser')
 const path = require('path')
 const morgan = require('morgan')
 const mongoose = require('mongoose')
-const multer = require('multer')
+// const multer = require('multer')
 const verify = promisify(require('jsonwebtoken').verify)
 const bearer = require('express-bearer-token')()
 const { v4 } = require('uuid')
@@ -25,19 +25,19 @@ const mongooseOptions = {
     family: 4
 }
 
-const multerOptions = {
-    storage: multer.diskStorage({
-        destination: (req, file, cb) => {
-            cb(null, 'uploads')
-        },
-        filename: (req, file, cb) => {
-            cb(null, v4() + '-' + file.originalname)
-        }
-    }),
-    fileFilter: (req, file, cb) => {
-        cb(null, file.mimetype === 'image/png' || file.mimetype === 'image/jpg' || file.mimetype === 'image/jpeg')
-    }
-}
+// const multerOptions = {
+//     storage: multer.diskStorage({
+//         destination: (req, file, cb) => {
+//             cb(null, 'uploads')
+//         },
+//         filename: (req, file, cb) => {
+//             cb(null, v4() + '-' + file.originalname)
+//         }
+//     }),
+//     fileFilter: (req, file, cb) => {
+//         cb(null, file.mimetype === 'image/png' || file.mimetype === 'image/jpg' || file.mimetype === 'image/jpeg')
+//     }
+// }
 
 app
     .use(morgan('dev'))
@@ -45,13 +45,13 @@ app
     .use('/uploads', express.static(path.join(__dirname, 'uploads')))
     .use(bodyParser.urlencoded({ extended: false }))
     .use(bodyParser.json())
-    .use(multer(multerOptions).array('images'))
+    // .use(multer(multerOptions).single('image'))
     .use(bearer)
     .use(async (req, res, next) => {
         if (req.token) {
             try {
                 const { _id } = await verify(req.token, process.env.JWT_SECRET)
-                if (_id) req.user = await User.findOne({ _id, authToken: req.token })
+                if (_id) req.user = await User.findOne({ _id, authToken: req.token }, '-password -authToken')
                 next()
             } catch (err) {
                 switch (err.name) {
