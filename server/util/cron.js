@@ -61,7 +61,14 @@ const tasks = [
 
 module.exports = {
     tasks,
-    startAll: () => tasks.forEach(task => task.start()),
+    startAll: () => {
+        let started = 0
+        tasks.forEach(task => {
+            task.start()
+            ++started
+        })
+        return started
+    },
     stopAll: () => tasks.forEach(task => task.stop()),
     schedule: (cronExpression, func) => {
         if (!validate(cronExpression)) return null

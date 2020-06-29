@@ -33,8 +33,6 @@
                         :recipe="recipe"
                         @view="openView"
                         @edit="openEdit"
-                        @favorite="toggleFavorite"
-                        @delete="deleteRecipe"
                     />
                 </div>
             </div>
@@ -51,8 +49,7 @@ import RecipeCard from "../components/RecipeCard";
 import RecipeView from "../components/RecipeView";
 import RecipeEdit from "../components/RecipeEdit";
 
-import RecipeService from "../services/RecipeService";
-import UserService from "../services/UserService";
+import { getRecipes } from "../services/RecipeService";
 
 import { Unit } from "../util/units";
 
@@ -68,15 +65,14 @@ export default {
             loading: true,
             recipes: null,
             currentRecipe: null, // Recipe object
-            mode: null, // 'edit' | 'view'
-            multiplier: 1
+            mode: null // null | 'edit' | 'view'
         };
     },
     methods: {
         openCreate() {
             this.currentRecipe = {
                 title: "New Recipe",
-                description: "Enter a description...",
+                description: "",
                 serving: {
                     count: 1,
                     size: 1,
@@ -105,79 +101,10 @@ export default {
         close() {
             this.mode = null;
             this.currentRecipe = null;
-        },
-        toggleFavorite(recipe) {
-            const i = this.$parent.user.favorites.indexOf(recipe._id);
-            if (i >= 0) {
-                // Remove favorite
-                UserService.removeFavorite(recipe._id)
-                    .then(({ status, data }) => {
-                        switch (status) {
-                            case 204:
-                                this.$parent.user.favorites.splice(i, 1);
-                                break;
-                            case 401:
-                                this.$parent._401();
-                                this.$router.push("/");
-                                break;
-                            default:
-                                this.$parent._500();
-                                break;
-                        }
-                    })
-                    .catch(err => {
-                        console.error(err);
-                        this.$parent._500();
-                    });
-            } else {
-                // Add favorite
-                UserService.addFavorite(recipe._id)
-                    .then(({ status, data }) => {
-                        switch (status) {
-                            case 201:
-                                this.$parent.user.favorites = data;
-                                break;
-                            case 401:
-                                this.$parent._401();
-                                this.$router.push("/");
-                                break;
-                            default:
-                                this.$parent._500();
-                                break;
-                        }
-                    })
-                    .catch(err => {
-                        console.error(err);
-                        this.$parent._500();
-                    });
-            }
-        },
-        deleteRecipe(recipe) {
-            // Send request to server
-            RecipeService.deleteRecipe(recipe)
-                .then(({ status }) => {
-                    switch (status) {
-                        case 204:
-                            this.recipes = this.recipes.filter(
-                                r => r._id !== recipe._id
-                            );
-                            break;
-                        case 401:
-                            this.$parent._401();
-                            break;
-                        default:
-                            this.$parent._500();
-                            break;
-                    }
-                })
-                .catch(err => {
-                    console.error(err);
-                    this.$parent._500();
-                });
         }
     },
     mounted() {
-        RecipeService.getRecipes()
+        getRecipes()
             .then(({ status, data }) => {
                 switch (status) {
                     case 200:

@@ -5,17 +5,13 @@ const bindToken = () => {
     return token ? { headers: { Authorization: `Bearer ${token}` } } : undefined
 }
 
-export default {
-    get: url => axios.get(url, bindToken()),
+const Get = url => axios.get(url, bindToken())
+const Post = (url, body) => axios.post(url, body, bindToken())
+const Put = (url, body) => axios.put(url, body, bindToken())
+const Delete = url => axios.delete(url, bindToken())
+const Resolve = (promise, success) =>
+    promise
+        .then(({ data }) => Promise.resolve({ status: success || 200, data }))
+        .catch(({ response: { status, data } }) => Promise.resolve({ status, data }))
 
-    post: (url, body) => axios.post(url, body, bindToken()),
-
-    put: (url, body) => axios.put(url, body, bindToken()),
-
-    delete: url => axios.delete(url, bindToken()),
-
-    resolve: (promise, success) =>
-        promise
-            .then(({ data }) => Promise.resolve({ status: success || 200, data }))
-            .catch(({ response: { status, data } }) => Promise.resolve({ status, data }))
-}
+export { Get, Post, Put, Delete, Resolve }

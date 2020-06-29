@@ -23,6 +23,12 @@
                 type="button"
             >Saved</button>
             <button
+                v-if="showError"
+                class="btn btn-link text-danger float-right m-1 my-2"
+                disabled
+                type="button"
+            >Error</button>
+            <button
                 v-if="showSaving"
                 class="btn btn-link text-success float-right m-1 my-2"
                 disabled
@@ -33,6 +39,7 @@
             <div class="col-7">
                 <label for="title">Recipe Title</label>
                 <input
+                    :class="{'is-invalid': errors.title}"
                     id="title"
                     type="text"
                     class="form-control"
@@ -40,11 +47,13 @@
                     v-model="editing.title"
                     maxlength="64"
                 />
-                <small class="form-text text-muted text-right">{{editing.title.length}}/64</small>
+                <small class="w-75 invalid-feedback float-left">{{errors.title}}</small>
+                <small class="form-text text-muted float-right">{{editing.title.length}}/64</small>
             </div>
             <div class="col-2">
                 <label for="servingCount">Servings</label>
                 <input
+                    :class="{'is-invalid': errors.serving.count}"
                     class="form-control"
                     type="number"
                     id="servingCount"
@@ -52,11 +61,13 @@
                     step="1"
                     v-model="editing.serving.count"
                 />
+                <small class="invalid-feedback">{{errors.serving.count}}</small>
             </div>
             <div class="col-3">
                 <label for="servingSize">Serving Size</label>
                 <div class="input-group">
                     <input
+                        :class="{'is-invalid': errors.serving.size}"
                         type="number"
                         id="servingSize"
                         class="form-control"
@@ -64,7 +75,11 @@
                         step="0.25"
                         v-model="editing.serving.size"
                     />
-                    <select class="custom-select" v-model="editing.serving.units">
+                    <select
+                        :class="{'is-invalid': errors.serving.units}"
+                        class="custom-select"
+                        v-model="editing.serving.units"
+                    >
                         <option :value="undefined">- Units -</option>
                         <option
                             v-for="({singular, plural}, index) in allUnits"
@@ -72,6 +87,10 @@
                             :value="singular"
                         >{{editing.serving.size > 1 ? plural : singular}}</option>
                     </select>
+                    <small class="invalid-feedback">
+                        <span class="w-50 float-left">{{errors.serving.size}}</span>
+                        <span class="w-50 float-right">{{errors.serving.units}}</span>
+                    </small>
                 </div>
             </div>
         </div>
@@ -79,22 +98,34 @@
             <div class="col">
                 <label for="description">Description</label>
                 <textarea
+                    :class="{'is-invalid': errors.description}"
                     v-model="editing.description"
                     maxlength="1024"
                     id="description"
                     type="text"
                     class="form-control"
+                    placeholder="Enter description..."
                 ></textarea>
-                <small class="form-text text-muted text-right">{{editing.description.length}}/1024</small>
+                <small class="invalid-feedback w-75 float-left">{{errors.description}}</small>
+                <small class="form-text text-muted float-right">{{editing.description.length}}/1024</small>
             </div>
         </div>
 
-        <h4 class="pt-2">Image</h4>
+        <h4 class="pt-2">
+            Image
+            <button
+                v-if="errors.image"
+                class="btn btn-link text-danger"
+                disabled
+                type="button"
+            >{{errors.image}}</button>
+        </h4>
         <ul class="list-group">
             <li class="list-group-item list-group-item-action">
                 <div class="input-group">
                     <div class="custom-file">
                         <input
+                            :class="{'is-invalid': errors.image}"
                             type="file"
                             id="addFile"
                             class="custom-file-input"
@@ -126,7 +157,15 @@
             </li>
         </ul>
 
-        <h4 class="pt-3">Ingredients</h4>
+        <h4 class="pt-3">
+            Ingredients
+            <button
+                v-if="errors.ingredients"
+                class="btn btn-link text-danger"
+                disabled
+                type="button"
+            >{{errors.ingredients}}</button>
+        </h4>
         <ul class="list-group">
             <li
                 class="list-group-item list-group-item-action"
@@ -135,13 +174,18 @@
             >
                 <div class="input-group">
                     <input
+                        :class="{'is-invalid': errors.ingredient[index] && errors.ingredient[index].amount}"
                         type="number"
                         class="form-control"
                         v-model="editing.ingredients[index].amount"
                         min="0.25"
                         step="0.25"
                     />
-                    <select class="custom-select" v-model="editing.ingredients[index].units">
+                    <select
+                        class="custom-select"
+                        v-model="editing.ingredients[index].units"
+                        :class="{'is-invalid': errors.ingredient[index] && errors.ingredient[index].units}"
+                    >
                         <option :value="undefined">- Units -</option>
                         <option
                             v-for="({singular, plural}, index1) in allUnits"
@@ -150,6 +194,7 @@
                         >{{editing.ingredients[index].amount > 1 ? plural : singular}}</option>
                     </select>
                     <input
+                        :class="{'is-invalid': errors.ingredient[index] && errors.ingredient[index].name}"
                         type="text"
                         class="form-control"
                         v-model="editing.ingredients[index].name"
@@ -188,7 +233,22 @@
                     </div>
                 </div>
                 <small
-                    class="form-text text-muted text-right mr-5 pr-4"
+                    class="float-left text-danger"
+                    style="width: 90%;"
+                    v-if="errors.ingredient[index]"
+                >
+                    <span
+                        style="width: 35%;"
+                        class="d-inline-block"
+                    >{{errors.ingredient[index].amount}}</span>
+                    <span
+                        style="width: 35%;"
+                        class="d-inline-block"
+                    >{{errors.ingredient[index].units}}</span>
+                    <span class="d-inline-block">{{errors.ingredient[index].name}}</span>
+                </small>
+                <small
+                    class="form-text text-muted float-right mr-5 pr-4"
                 >{{editing.ingredients[index].name.length}}/64</small>
             </li>
             <li class="list-group-item list-group-item-action">
@@ -200,7 +260,15 @@
             </li>
         </ul>
 
-        <h4 class="pt-3">Steps</h4>
+        <h4 class="pt-3">
+            Steps
+            <button
+                v-if="errors.steps"
+                class="btn btn-link text-danger"
+                disabled
+                type="button"
+            >{{errors.steps}}</button>
+        </h4>
         <ol class="list-group">
             <li
                 class="list-group-item list-group-item-action"
@@ -212,10 +280,11 @@
                         <span class="input-group-text">{{index + 1}}.</span>
                     </div>
                     <input
+                        :class="{'is-invalid': errors.step[index]}"
                         type="text"
                         class="form-control"
                         v-model="editing.steps[index]"
-                        maxlength="64"
+                        maxlength="128"
                     />
                     <div class="input-group-append">
                         <button
@@ -250,8 +319,12 @@
                     </div>
                 </div>
                 <small
-                    class="form-text text-muted text-right mr-5 pr-4"
-                >{{editing.steps[index].length}}/64</small>
+                    class="float-left text-danger"
+                    v-if="errors.step[index]"
+                >{{errors.step[index]}}</small>
+                <small
+                    class="form-text text-muted float-right mr-5 pr-4"
+                >{{editing.steps[index].length}}/128</small>
             </li>
             <li class="list-group-item list-group-item-action">
                 <button
@@ -267,7 +340,7 @@
 <script>
 import { Unit } from "../util/units";
 
-import RecipeService from "../services/RecipeService";
+import { createRecipe, editRecipe } from "../services/RecipeService";
 
 export default {
     name: "RecipeEdit",
@@ -277,7 +350,9 @@ export default {
             editing: null,
             allUnits: Unit.list(),
             showSaved: false,
-            showSaving: false
+            showSaving: false,
+            showError: false,
+            errors: null
         };
     },
     methods: {
@@ -338,10 +413,11 @@ export default {
             this.editing.image = undefined;
         },
         save() {
+            this.clearErrors();
             this.showSaving = true;
             if (this.editing._id) {
                 // Send request to edit recipe
-                RecipeService.editRecipe(this.editing)
+                editRecipe(this.editing)
                     .then(({ status, data }) => {
                         switch (status) {
                             case 200:
@@ -371,8 +447,11 @@ export default {
                             case 401:
                                 this.$parent.$parent._401();
                                 break;
+                            case 422:
+                                this.fillErrors(data);
+                                break;
                             default:
-                                this.$parent.$parent._500();
+                                this.showError = true;
                         }
                     })
                     .catch(err => {
@@ -383,8 +462,9 @@ export default {
                         this.showSaving = false;
                     });
             } else {
-                // Send request to edit recipe
-                RecipeService.createRecipe(this.editing)
+                // Send request to create recipe
+                console.log(this.editing);
+                createRecipe(this.editing)
                     .then(({ status, data }) => {
                         switch (status) {
                             case 201:
@@ -410,8 +490,11 @@ export default {
                             case 401:
                                 this.$parent.$parent._401();
                                 break;
+                            case 422:
+                                this.fillErrors(data);
+                                break;
                             default:
-                                this.$parent.$parent._500();
+                                this.showError = true;
                         }
                     })
                     .catch(err => {
@@ -419,6 +502,63 @@ export default {
                         this.$parent.$parent._500();
                     });
             }
+        },
+        fillErrors({ errors }) {
+            this.showSaving = false;
+            this.showError = true;
+            errors.forEach(({ param, msg }) => {
+                let match = [];
+                if (param === "title") this.errors.title = msg;
+                else if (param === "serving.count")
+                    this.errors.serving.count = msg;
+                else if (param === "serving.size")
+                    this.errors.serving.size = msg;
+                else if (param === "serving.units")
+                    this.errors.serving.units = msg;
+                else if (param === "description") this.errors.description = msg;
+                else if (param === "image") this.errors.image = msg;
+                else if (param === "ingredients") this.errors.ingredients = msg;
+                else if (
+                    (match = /^ingredients\[([0-9]+)\]\.amount/.exec(param))
+                ) {
+                    if (!this.errors.ingredient[+match[1]])
+                        this.errors.ingredient[+match[1]] = {};
+                    this.errors.ingredient[+match[1]].amount = msg;
+                } else if (
+                    (match = /^ingredients\[([0-9]+)\]\.units/.exec(param))
+                ) {
+                    if (!this.errors.ingredient[+match[1]])
+                        this.errors.ingredient[+match[1]] = {};
+                    this.errors.ingredient[+match[1]].units = msg;
+                } else if (
+                    (match = /^ingredients\[([0-9]+)\]\.name/.exec(param))
+                ) {
+                    if (!this.errors.ingredient[+match[1]])
+                        this.errors.ingredient[+match[1]] = {};
+                    this.errors.ingredient[+match[1]].name = msg;
+                } else if (param === "steps") {
+                    this.errors.steps = msg;
+                } else if ((match = /^steps\[([0-9]+)\]/.exec(param))) {
+                    this.errors.step[+match[1]] = msg;
+                }
+            });
+        },
+        clearErrors() {
+            this.showError = false;
+            this.errors = {
+                title: undefined,
+                serving: {
+                    count: undefined,
+                    size: undefined,
+                    units: undefined
+                },
+                description: undefined,
+                image: undefined,
+                ingredients: undefined,
+                ingredient: [], // {name, amount, units}
+                steps: undefined,
+                step: []
+            };
         }
     },
     created() {
@@ -427,6 +567,7 @@ export default {
             ingredients: [...this.recipe.ingredients],
             steps: [...this.recipe.steps]
         };
+        this.clearErrors();
     }
 };
 </script>

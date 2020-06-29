@@ -1,9 +1,9 @@
-import Send from './RequestSender'
+import { Resolve, Get, Post, Delete } from './RequestSender'
 
 const url = '/api/user'
 
-export default {
-    getUser: uid => Send.resolve(Send.get(`${url}${uid ? `/${uid}` : ''}`)),
-    addFavorite: rid => Send.resolve(Send.post(`${url}/favorites/${rid}`, {}), 201),
-    removeFavorite: rid => Send.resolve(Send.delete(`${url}/favorites/${rid}`, {}), 204)
-}
+const getUser = uid => Resolve(Get(`${url}${uid ? `/${uid}` : ''}`))
+const addFavorite = rid => Resolve(Post(`${url}/favorites/${rid}`, {}), 201)
+const removeFavorite = rid => Resolve(Delete(`${url}/favorites/${rid}`, {}), 204)
+
+export { getUser, addFavorite, removeFavorite }

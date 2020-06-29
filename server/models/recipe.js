@@ -54,10 +54,10 @@ const recipeSchema = new Schema({
     steps: [
         {
             type: String,
-            maxlength: 64
+            maxlength: 128
         }
     ],
-    images: String
+    image: String
 })
 
 module.exports = model('Recipe', recipeSchema)

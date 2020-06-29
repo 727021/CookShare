@@ -208,8 +208,8 @@ import { decode } from "jsonwebtoken";
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
 
-import AuthService from "./services/AuthService";
-import UserService from "./services/UserService";
+import { register, login, logout } from "./services/AuthService";
+import { getUser } from "./services/UserService";
 
 export default {
     name: "app",
@@ -279,7 +279,7 @@ export default {
             }
         },
         login() {
-            AuthService.login(this.loginForm.username, this.loginForm.password)
+            login(this.loginForm.username, this.loginForm.password)
                 .then(({ status, data }) => {
                     switch (status) {
                         case 200:
@@ -316,7 +316,7 @@ export default {
                 });
         },
         register() {
-            AuthService.register(
+            register(
                 this.registerForm.username.value,
                 this.registerForm.email.value,
                 this.registerForm.firstname.value,
@@ -357,7 +357,7 @@ export default {
                 });
         },
         logout() {
-            AuthService.logout()
+            logout()
                 .catch(err => {
                     console.error(err);
                     this.hideLogin();
@@ -371,7 +371,7 @@ export default {
                 });
         },
         getUser() {
-            return UserService.getUser()
+            return getUser()
                 .then(({ status, data }) => {
                     switch (status) {
                         case 200:

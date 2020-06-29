@@ -1,24 +1,14 @@
-import Send from './RequestSender'
+import { Resolve, Get, Post, Put, Delete } from './RequestSender'
 
 const url = '/api/recipe'
 
-export default {
-    getRecipes() {
-        return Send.resolve(Send.get(url))
-    },
-    getUnits() {
-        return Send.resolve(Send.get(`${url}/units`))
-    },
-    createRecipe(recipe) {
-        Send.resolve
-        return Send.resolve(Send.post(url, { ...recipe }), 201)
-    },
-    editRecipe(recipe) {
-        const { _id, ...newRecipe } = recipe
-        console.log(newRecipe)
-        return Send.resolve(Send.put(`${url}/${_id}`, newRecipe))
-    },
-    deleteRecipe(recipe) {
-        return Send.resolve(Send.delete(`${url}/${recipe._id}`), 204)
-    }
+const getRecipes = () => Resolve(Get(url))
+const getUnits = () => Resolve(Get(`${url}/units`))
+const createRecipe = recipe => Resolve(Post(url, { ...recipe }), 201)
+const editRecipe = recipe => {
+    const { _id, ...newRecipe } = recipe
+    return Resolve(Put(`${url}/${_id}`, newRecipe))
 }
+const deleteRecipe = recipe => Resolve(Delete(`${url}/${recipe._id}`), 204)
+
+export { getRecipes, getUnits, createRecipe, editRecipe, deleteRecipe }

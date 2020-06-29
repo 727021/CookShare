@@ -48,8 +48,6 @@ exports.createRecipe = async (req, res, next) => {
     if (!errors.isEmpty()) return res.status(422).send({ errors: errors.array() })
 
     const { title, description, serving, ingredients, steps, image } = req.body
-    // TODO Make sure image uploads work
-    // const image = req.file
 
     try {
         const recipe = await new Recipe({
@@ -75,8 +73,6 @@ exports.editRecipe = async (req, res, next) => {
 
     const { rid } = req.params
     const { title, description, serving, ingredients, steps, image } = req.body
-    // TODO Make sure image uploads work
-    // const image = req.file
 
     try {
         const recipe = await Recipe.findById(rid)
