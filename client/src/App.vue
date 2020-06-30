@@ -1,10 +1,52 @@
 <template>
     <div id="app">
-        <Header @show-login="showLogin" @show-register="showRegister" @logout="logout" />
+        <Header
+            :username="user ? user.username : null"
+            @show-login="$bvModal.show('loginModal')"
+            @show-register="$bvModal.show('registerModal')"
+            @logout="logout"
+        />
         <router-view />
         <Footer />
         <!-- Log In Modal -->
-        <div v-if="loginVisible">
+        <b-modal
+            id="loginModal"
+            scrollable
+            no-stacking
+            no-close-on-backdrop
+            no-close-on-esc
+            title="Log In"
+            @hidden="clearLogin"
+        >
+            <b-form @submit.prevent="null">
+                <b-alert v-if="loginForm.error" show variant="danger">{{loginForm.error}}</b-alert>
+                <b-form-group>
+                    <b-form-input
+                        v-model="loginForm.username"
+                        placeholder="Username/email"
+                        autocomplete="current-username"
+                    ></b-form-input>
+                </b-form-group>
+                <b-form-group>
+                    <b-form-input
+                        v-model="loginForm.password"
+                        placeholder="Password"
+                        autocomplete="current-password"
+                        type="password"
+                    ></b-form-input>
+                </b-form-group>
+            </b-form>
+            <template v-slot:modal-header-close>
+                <fa-icon icon="times" />
+            </template>
+            <template v-slot:modal-footer>
+                <b-btn variant="link" class="mr-auto" disabled>Forgot Password</b-btn>
+                <b-btn variant="outline-secondary" v-b-modal.registerModal>Create Account</b-btn>
+                <b-btn @click.prevent="login" variant="primary">Log In</b-btn>
+            </template>
+        </b-modal>
+
+        <!-- <div v-if="loginVisible">
             <transition name="modal">
                 <div class="modal-mask">
                     <div class="modal-wrapper">
@@ -68,8 +110,8 @@
                     </div>
                 </div>
             </transition>
-        </div>
-        <!-- Create Account Modal -->
+        </div>-->
+        <!-- TODO Create Account Modal -->
         <div v-if="registerVisible">
             <transition name="modal">
                 <div class="modal-mask">
@@ -257,22 +299,12 @@ export default {
         };
     },
     methods: {
-        showLogin() {
-            this.hideRegister();
-            this.loginVisible = true;
-        },
-        showRegister() {
-            this.hideLogin();
-            this.registerVisible = true;
-        },
-        hideLogin() {
-            this.loginVisible = false;
+        clearLogin() {
             for (let a in this.loginForm) {
                 this.loginForm[a] = undefined;
             }
         },
-        hideRegister() {
-            this.registerVisible = false;
+        clearRegister() {
             for (const a in this.registerForm) {
                 this.registerForm[a].error = null;
                 this.registerForm[a].value = "";
@@ -286,7 +318,7 @@ export default {
                             localStorage.setItem("token", data.token);
                             this.getUser()
                                 .then(() => {
-                                    this.hideLogin();
+                                    this.$bvModal.hide("loginModal");
                                     if (this.redirect) {
                                         this.$router.push(this.redirect);
                                         this.redirect = undefined;
@@ -295,7 +327,7 @@ export default {
                                 .catch(err => {});
                             break;
                         case 401:
-                            this.hideLogin();
+                            this.$bvModal.hide("loginModal");
                             this.getUser();
                             break;
                         case 422:
@@ -304,14 +336,14 @@ export default {
                                 data.error || "Invalid Login";
                             break;
                         default:
-                            this.hideLogin();
+                            this.$bvModal.hide("loginModal");
                             this._500();
                             break;
                     }
                 })
                 .catch(err => {
                     console.error(err);
-                    this.hideLogin();
+                    this.$bvModal.hide("loginModal");
                     this._500();
                 });
         },
@@ -328,11 +360,11 @@ export default {
                     console.log(status, data);
                     switch (status) {
                         case 201:
-                            this.showLogin();
+                            this.$bvModal.show("loginModal");
                             this.loginForm.username = data.username;
                             break;
                         case 401:
-                            this.hideRegister();
+                            this.$bvModal.hide("registerModal");
                             this.getUser();
                             break;
                         case 422:
@@ -345,14 +377,14 @@ export default {
                             }
                             break;
                         default:
-                            this.hideRegister();
+                            this.$bvModal.hide("registerModal");
                             this._500();
                             break;
                     }
                 })
                 .catch(err => {
                     console.error(err);
-                    this.hideLogin();
+                    this.$bvModal.hide("registerModal");
                     this._500();
                 });
         },
@@ -360,7 +392,8 @@ export default {
             logout()
                 .catch(err => {
                     console.error(err);
-                    this.hideLogin();
+                    this.$bvModal.hide("loginModal");
+                    this.$bvModal.hide("registerModal");
                     this._500();
                 })
                 .finally(() => {
@@ -381,15 +414,16 @@ export default {
                             this._401();
                             break;
                         default:
-                            this.hideRegister();
-                            this.hideLogin();
+                            this.$bvModal.hide("loginModal");
+                            this.$bvModal.hide("registerModal");
                             this._500();
                             break;
                     }
                 })
                 .catch(err => {
                     console.error(err);
-                    this.hideLogin();
+                    this.$bvModal.hide("loginModal");
+                    this.$bvModal.hide("registerModal");
                     this._500();
                 });
         },
@@ -407,7 +441,7 @@ export default {
         this.$router.onError(err => {
             if (err.name === "NotLoggedIn") {
                 this.redirect = err.message;
-                this.showLogin();
+                this.$bvModal.show("loginModal");
             }
         });
     }
@@ -416,8 +450,8 @@ export default {
 
 <style>
 body {
-    margin-top: 4rem;
-    margin-bottom: 4rem;
+    margin-top: 4rem !important;
+    margin-bottom: 4rem !important;
 }
 
 .modal-mask {

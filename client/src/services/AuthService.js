@@ -12,7 +12,7 @@ const register = (username, email, firstname, lastname, password, confirm) =>
 
 const logout = () => Delete(url).then(() => Promise.resolve()).catch(() => Promise.resolve())
 
-export default {
+export {
     login,
     register,
     logout

@@ -1,6 +1,12 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import { Home, Profile, Recipes, Recipe, Cookbooks, Cookbook, _500, _404 } from '../views/AllViews'
+
+import Home from '../views/Home'
+import Profile from '../views/Profile'
+import Recipes from '../views/Recipes'
+import Cookbooks from '../views/Cookbooks'
+import _500 from '../views/500'
+import _404 from '../views/404'
 
 Vue.use(VueRouter)
 
@@ -27,25 +33,9 @@ const routes = [
         }
     },
     {
-        path: '/recipes/:rid',
-        name: 'Recipe',
-        component: Recipe,
-        meta: {
-            needsAuth: true
-        }
-    },
-    {
         path: '/cookbooks',
         name: 'Cookbooks',
         component: Cookbooks,
-        meta: {
-            needsAuth: true
-        }
-    },
-    {
-        path: '/cookbooks/:cid',
-        name: 'Cookbook',
-        component: Cookbook,
         meta: {
             needsAuth: true
         }
