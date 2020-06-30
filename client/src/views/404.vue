@@ -1,6 +1,6 @@
 <template>
     <div class="container mt-2 text-center">
-        <h1>404 - Page Not Found</h1>
+        <h1 class="border-bottom">404 - Page Not Found</h1>
         <p>
             Looks like the page at
             <code>{{this.$route.params.pathMatch}}</code> doesn't exist!

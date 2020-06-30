@@ -2,39 +2,290 @@
     <div>
         <h1 class="border-bottom border-secondary">
             Editing {{editing.title}}
-            <button
-                class="btn btn-outline-danger float-right m-1 my-2"
-                type="button"
-                @click="$emit('close')"
-            >
-                <i class="fas fa-times"></i>
-            </button>
-            <button
-                class="btn btn-outline-success float-right m-1 my-2"
-                type="button"
-                @click="save"
-            >
-                <i class="fas fa-save"></i>
-            </button>
-            <button
+            <b-btn variant="outline-danger" class="float-right m-1 my-2" @click="$emit('close')">
+                <fa-icon icon="times" />
+            </b-btn>
+            <b-btn variant="outline-success" class="float-right m-1 my-2" @click="save">
+                <fa-icon icon="save" />
+            </b-btn>
+            <b-btn
                 v-if="showSaved"
-                class="btn btn-link text-success float-right m-1 my-2"
+                variant="link"
+                class="text-success float-right m-1 my-2"
                 disabled
-                type="button"
-            >Saved</button>
-            <button
+            >Saved</b-btn>
+            <b-btn
                 v-if="showError"
-                class="btn btn-link text-danger float-right m-1 my-2"
+                variant="link"
+                class="text-danger float-right m-1 my-2"
                 disabled
-                type="button"
-            >Error</button>
-            <button
+            >Error</b-btn>
+            <b-btn
                 v-if="showSaving"
-                class="btn btn-link text-success float-right m-1 my-2"
+                variant="link"
+                class="text-success float-right m-1 my-2"
                 disabled
                 type="button"
-            >Saving...</button>
+            >Saving...</b-btn>
         </h1>
+
+        <b-form-row>
+            <b-col cols="7">
+                <b-form-group class="m-0" label="Recipe Title">
+                    <b-input
+                        placeholder="Recipe Title"
+                        :state="errors.title ? false : null"
+                        v-model="editing.title"
+                        maxlength="64"
+                    ></b-input>
+                    <template v-slot:invalid-feedback>
+                        <span class="float-left">{{errors.title}}</span>
+                    </template>
+                    <template v-slot:description>
+                        <span class="float-right">{{editing.title.length}}/64</span>
+                    </template>
+                </b-form-group>
+            </b-col>
+            <b-col cols="2">
+                <b-form-group class="m-0" label="Servings" :invalid-feedback="errors.serving.count">
+                    <b-input
+                        type="number"
+                        min="1"
+                        step="1"
+                        v-model="editing.serving.count"
+                        :state="errors.serving.count ? false : null"
+                    ></b-input>
+                </b-form-group>
+            </b-col>
+            <b-col cols="3">
+                <b-form-group
+                    class="m-0"
+                    label="Serving Size"
+                    :state="errors.serving.size || errors.serving.units ? false : null"
+                >
+                    <template v-slot:invalid-feedback>
+                        <span class="w-50 float-left">{{errors.serving.size}}</span>
+                        <span class="w-50 float-right">{{errors.serving.units}}</span>
+                    </template>
+                    <b-input-group>
+                        <b-input
+                            type="number"
+                            min="1"
+                            step="0.25"
+                            v-model="editing.serving.size"
+                            :state="errors.serving.size ? false : null"
+                        ></b-input>
+                        <b-select
+                            v-model="editing.serving.units"
+                            :state="errors.serving.units ? false : null"
+                            :options="allUnits"
+                            value-field="singular"
+                            :text-field="editing.serving.size > 1 ? 'plural' : 'singular'"
+                        >
+                            <template v-slot:first>
+                                <b-select-option :value="undefined">-- Units --</b-select-option>
+                            </template>
+                        </b-select>
+                    </b-input-group>
+                </b-form-group>
+            </b-col>
+        </b-form-row>
+        <b-form-row>
+            <b-col>
+                <b-form-group class="m-0" label="Description">
+                    <template v-slot:invalid-feedback>
+                        <span class="float-left">{{errors.description}}</span>
+                    </template>
+                    <template v-slot:description>
+                        <span class="float-right">{{editing.description.length}}/1024</span>
+                    </template>
+                    <b-textarea
+                        v-model="editing.description"
+                        :state="errors.description ? false : null"
+                        placeholder="Enter description..."
+                        maxlength="1024"
+                    ></b-textarea>
+                </b-form-group>
+            </b-col>
+        </b-form-row>
+        <h4>
+            Image
+            <b-btn v-if="errors.image" variant="link" class="text-danger" disabled>{{errors.image}}</b-btn>
+        </h4>
+        <b-list-group>
+            <b-list-group-item>
+                <b-input-group>
+                    <b-form-file
+                        placeholder="Choose an image..."
+                        @input="previewImage"
+                        :state="errors.image ? false : null"
+                        v-model="newImage"
+                        accept="image/jpg, image/jpeg, image/png"
+                    ></b-form-file>
+                    <template v-slot:append>
+                        <b-btn variant="outline-danger" @click="newImage = null; previewImage()">
+                            <fa-icon icon="trash-alt" />
+                        </b-btn>
+                    </template>
+                </b-input-group>
+            </b-list-group-item>
+            <b-list-group-item v-if="editing.image">
+                <b-carousel class="bg-dark py-2 text-center rounded">
+                    <b-carousel-slide>
+                        <template v-slot:img>
+                            <img
+                                :src="imagePreview || editing.image"
+                                class="rounded"
+                                style="height: 20rem;"
+                            />
+                        </template>
+                    </b-carousel-slide>
+                </b-carousel>
+            </b-list-group-item>
+        </b-list-group>
+        <h4 class="pt-3">
+            Ingredients
+            <b-btn
+                v-if="errors.ingredients"
+                variant="link"
+                class="text-danger"
+            >{{errors.ingredients}}</b-btn>
+        </h4>
+        <b-list-group>
+            <b-list-group-item v-for="(value, index) in editing.ingredients" :key="index">
+                <b-form-group
+                    class="m-0"
+                    :state="errors.ingredients || errors.ingredient.length > 0 && errors.ingredient.some(i => Boolean(i.amount) || Boolean(i.units) || Boolean(i.name)) ? false : null"
+                >
+                    <template v-slot:invalid-feedback>
+                        <span class="float-left">
+                            <span
+                                class="pr-2"
+                            >{{errors.ingredient[index] ? errors.ingredient[index].amount : ''}}</span>
+                            <span
+                                class="pr-2"
+                            >{{errors.ingredient[index] ? errors.ingredient[index].units : ''}}</span>
+                            <span
+                                class="pr-2"
+                            >{{errors.ingredient[index] ? errors.ingredient[index].name : ''}}</span>
+                        </span>
+                    </template>
+                    <template v-slot:description>
+                        <span
+                            class="float-right mr-5 pr-4"
+                        >{{editing.ingredients[index].name.length}}/64</span>
+                    </template>
+                    <b-input-group>
+                        <b-input
+                            placeholder="Amount"
+                            type="number"
+                            min="0.25"
+                            step="0.25"
+                            :state="errors.ingredient[index] && errors.ingredient[index].amount ? false : null"
+                            v-model="editing.ingredients[index].amount"
+                        ></b-input>
+                        <b-select
+                            v-model="editing.ingredients[index].units"
+                            :state="errors.ingredient[index] && errors.ingredient[index].units ? false : null"
+                            :options="allUnits"
+                            value-field="singular"
+                            :text-field="editing.ingredients[index].amount > 1 ? 'plural' : 'singular'"
+                        >
+                            <template v-slot:first>
+                                <b-select-option :value="undefined">-- Units --</b-select-option>
+                            </template>
+                        </b-select>
+                        <b-input
+                            placeholder="Name"
+                            maxlength="64"
+                            :state="errors.ingredient[index] && errors.ingredient[index].name ? false : null"
+                            v-model="editing.ingredients[index].name"
+                        ></b-input>
+                        <template v-slot:append>
+                            <b-btn
+                                variant="outline-danger"
+                                :disabled="editing.ingredients.length === 1"
+                                @click="removeIngredient(index)"
+                            >
+                                <fa-icon icon="trash-alt" />
+                            </b-btn>
+                            <b-dropdown variant="outline-secondary">
+                                <b-dropdown-item
+                                    :disabled="index === 0"
+                                    @click="moveIngredient(index, 'up')"
+                                >
+                                    <fa-icon icon="angle-up" />Move Up
+                                </b-dropdown-item>
+                                <b-dropdown-item
+                                    :disabled="index === editing.ingredients.length - 1"
+                                    @click="moveIngredient(index, 'down')"
+                                >
+                                    <fa-icon icon="angle-down" />Move Down
+                                </b-dropdown-item>
+                            </b-dropdown>
+                        </template>
+                    </b-input-group>
+                </b-form-group>
+            </b-list-group-item>
+            <b-list-group-item>
+                <b-btn variant="outline-success" block @click="addIngredient">Add Ingredient</b-btn>
+            </b-list-group-item>
+        </b-list-group>
+        <h4 class="pt-3">
+            Steps
+            <b-btn v-if="errors.steps" variant="link" class="text-danger">{{errors.steps}}</b-btn>
+        </h4>
+        <b-list-group>
+            <b-list-group-item v-for="(value, index) in editing.steps" :key="index">
+                <b-form-group
+                    class="m-0"
+                    :state="errors.steps || errors.step.length > 0 && errors.step.some(s => Boolean(s)) ? false : null"
+                >
+                    <template v-slot:invalid-feedback>
+                        <span class="float-left">{{errors.step[index] ? errors.step[index] : ''}}</span>
+                    </template>
+                    <template v-slot:description>
+                        <span class="float-right mr-5 pr-4">{{editing.steps[index].length}}/128</span>
+                    </template>
+                    <b-input-group :prepend="`${index + 1}.`">
+                        <b-input
+                            :placeholder="`Step ${index + 1}`"
+                            maxlength="128"
+                            v-model="editing.steps[index]"
+                            :state="errors.step[index] ? false : null"
+                        ></b-input>
+                        <template v-slot:append>
+                            <b-btn
+                                variant="outline-danger"
+                                :disabled="editing.steps.length === 1"
+                                @click="removeStep(index)"
+                            >
+                                <fa-icon icon="trash-alt" />
+                            </b-btn>
+                            <b-dropdown variant="outline-secondary">
+                                <b-dropdown-item
+                                    :disabled="index === 0"
+                                    @click="moveStep(index, 'up')"
+                                >
+                                    <fa-icon icon="angle-up" />Move Up
+                                </b-dropdown-item>
+                                <b-dropdown-item
+                                    :disabled="index === editing.steps.length - 1"
+                                    @click="moveStep(index, 'down')"
+                                >
+                                    <fa-icon icon="angle-down" />Move Down
+                                </b-dropdown-item>
+                            </b-dropdown>
+                        </template>
+                    </b-input-group>
+                </b-form-group>
+            </b-list-group-item>
+            <b-list-group-item>
+                <b-btn variant="outline-success" block @click="addStep">Add Step</b-btn>
+            </b-list-group-item>
+        </b-list-group>
+
+        <!--
         <div class="form-row">
             <div class="col-7">
                 <label for="title">Recipe Title</label>
@@ -135,8 +386,12 @@
                         <label for="addFile" class="custom-file-label">Choose file...</label>
                     </div>
                     <div class="input-group-append">
-                        <button class="btn btn-outline-danger" type="button" @click="removeImage">
-                            <i class="fas fa-trash-alt"></i>
+                        <button
+                            class="btn btn-outline-danger"
+                            type="button"
+                            @click="editing.image = undefined"
+                        >
+                            <fa-icon icon="trash-alt" />
                         </button>
                     </div>
                 </div>
@@ -207,7 +462,7 @@
                             type="button"
                             @click="removeIngredient(index)"
                         >
-                            <i class="fas fa-trash-alt"></i>
+                            <fa-icon icon="trash-alt" />
                         </button>
                         <button
                             class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split"
@@ -220,14 +475,14 @@
                                 @click.prevent="moveIngredient(index, 'up')"
                                 class="dropdown-item"
                             >
-                                <i class="fas fa-angle-up"></i> Move Up
+                                <fa-icon icon="angle-up" />Move Up
                             </button>
                             <button
                                 :disabled="index === editing.ingredients.length - 1"
                                 @click.prevent="moveIngredient(index, 'down')"
                                 class="dropdown-item"
                             >
-                                <i class="fas fa-angle-down"></i> Move Down
+                                <fa-icon icon="angle-down" />Move Down
                             </button>
                         </div>
                     </div>
@@ -293,7 +548,7 @@
                             type="button"
                             @click="removeStep(index)"
                         >
-                            <i class="fas fa-trash-alt"></i>
+                            <fa-icon icon="trash-alt" />
                         </button>
                         <button
                             class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split"
@@ -306,14 +561,14 @@
                                 @click.prevent="moveStep(index, 'up')"
                                 class="dropdown-item"
                             >
-                                <i class="fas fa-angle-up"></i> Move Up
+                                <fa-icon icon="angle-up" />Move Up
                             </button>
                             <button
                                 :disabled="index === editing.steps.length - 1"
                                 @click.prevent="moveStep(index, 'down')"
                                 class="dropdown-item"
                             >
-                                <i class="fas fa-angle-down"></i> Move Down
+                                <fa-icon icon="angle-down" />Move Down
                             </button>
                         </div>
                     </div>
@@ -333,7 +588,7 @@
                     @click="addStep"
                 >Add Step</button>
             </li>
-        </ol>
+        </ol>-->
     </div>
 </template>
 
@@ -348,11 +603,14 @@ export default {
     data() {
         return {
             editing: null,
+            newImage: null,
+            imagePreview: null,
             allUnits: Unit.list(),
             showSaved: false,
             showSaving: false,
             showError: false,
-            errors: null
+            errors: null,
+            imgChanged: false
         };
     },
     methods: {
@@ -400,21 +658,21 @@ export default {
             }
             this.editing.steps = steps;
         },
-        addImage(e) {
-            console.log(e.target.result);
-            const reader = new FileReader();
-            reader.readAsDataURL(e.target.files[0]);
-            reader.onload = re => {
-                this.editing.image = re.target.result;
-                e.target.value = null;
-            };
-        },
-        removeImage() {
-            this.editing.image = undefined;
+        previewImage(file) {
+            this.editing.changeImage = true;
+            if (this.newImage) {
+                this.imagePreview = URL.createObjectURL(file);
+                this.editing.image = file;
+            } else {
+                URL.revokeObjectURL(this.imagePreview);
+                this.imagePreview = null;
+                this.editing.image = null;
+            }
         },
         save() {
             this.clearErrors();
             this.showSaving = true;
+            if (this.editing.changeImage) this.editing.image = this.newImage;
             if (this.editing._id) {
                 // Send request to edit recipe
                 editRecipe(this.editing)
@@ -435,13 +693,16 @@ export default {
                                 this.editing = {
                                     ...data,
                                     ingredients: [...data.ingredients],
-                                    steps: [...data.steps]
+                                    steps: [...data.steps],
+                                    changeImage: false
                                 };
                                 this.showSaving = false;
                                 this.showSaved = true;
+                                this.imgChanged = false;
+                                this.imagePreview = this.editing.image;
                                 setTimeout(
                                     () => (this.showSaved = false),
-                                    5000
+                                    3000
                                 );
                                 break;
                             case 401:
@@ -478,13 +739,16 @@ export default {
                                 this.editing = {
                                     ...data,
                                     ingredients: [...data.ingredients],
-                                    steps: [...data.steps]
+                                    steps: [...data.steps],
+                                    changeImage: false
                                 };
                                 this.showSaving = false;
                                 this.showSaved = true;
+                                this.imgChanged = false;
+                                this.imagePreview = this.editing.image;
                                 setTimeout(
                                     () => (this.showSaved = false),
-                                    5000
+                                    3000
                                 );
                                 break;
                             case 401:
@@ -565,15 +829,17 @@ export default {
         this.editing = {
             ...this.recipe,
             ingredients: [...this.recipe.ingredients],
-            steps: [...this.recipe.steps]
+            steps: [...this.recipe.steps],
+            changeImage: false
         };
+        this.imagePreview = this.editing.image || null;
         this.clearErrors();
     }
 };
 </script>
 
 <style scoped>
-.carousel-item > img {
+/* .carousel-item > img {
     height: 20rem;
     width: auto;
 }
@@ -582,5 +848,5 @@ export default {
 }
 .carousel-control-next {
     background: linear-gradient(to left, black, rgba(0, 0, 0, 0));
-}
+} */
 </style>

@@ -47,7 +47,9 @@ exports.createRecipe = async (req, res, next) => {
     const errors = validationResult(req)
     if (!errors.isEmpty()) return res.status(422).send({ errors: errors.array() })
 
-    const { title, description, serving, ingredients, steps, image } = req.body
+    const { title, description, serving, ingredients, steps } = req.body
+    const image = req.file ? `/api/uploads/${req.file.filename}` : null
+    console.log({ title, description, serving, ingredients, steps, image })
 
     try {
         const recipe = await new Recipe({
@@ -72,7 +74,8 @@ exports.editRecipe = async (req, res, next) => {
     if (!errors.isEmpty()) return res.status(422).send({ errors: errors.array() })
 
     const { rid } = req.params
-    const { title, description, serving, ingredients, steps, image } = req.body
+    const { title, description, serving, ingredients, steps, changeImage } = req.body
+    const image = req.file ? `/api/uploads/${req.file.filename}` : null
 
     try {
         const recipe = await Recipe.findById(rid)
@@ -86,9 +89,11 @@ exports.editRecipe = async (req, res, next) => {
         recipe.serving = serving
         recipe.ingredients = ingredients
         recipe.steps = steps
-        recipe.image = image
+        if (changeImage) recipe.image = image
 
         const updatedRecipe = await recipe.save()
+
+        console.log(updatedRecipe)
 
         if (!updatedRecipe) return res.status(409).send({ error: 'Failed to update recipe.' })
         res.status(200).send(updatedRecipe)

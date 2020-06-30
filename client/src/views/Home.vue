@@ -1,6 +1,6 @@
 <template>
     <b-container>
-        <h1>Home</h1>
+        <h1 class="border-bottom">Home</h1>
     </b-container>
 </template>
 

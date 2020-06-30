@@ -4,45 +4,119 @@
             :username="user ? user.username : null"
             @show-login="$bvModal.show('loginModal')"
             @show-register="$bvModal.show('registerModal')"
-            @logout="logout"
+            @logout="doLogout"
         />
         <router-view />
         <Footer />
+
         <!-- Log In Modal -->
         <b-modal
             id="loginModal"
             scrollable
             no-stacking
-            no-close-on-backdrop
-            no-close-on-esc
             title="Log In"
             @hidden="clearLogin"
         >
-            <b-form @submit.prevent="null">
-                <b-alert v-if="loginForm.error" show variant="danger">{{loginForm.error}}</b-alert>
-                <b-form-group>
-                    <b-form-input
-                        v-model="loginForm.username"
-                        placeholder="Username/email"
-                        autocomplete="current-username"
-                    ></b-form-input>
-                </b-form-group>
-                <b-form-group>
-                    <b-form-input
-                        v-model="loginForm.password"
-                        placeholder="Password"
-                        autocomplete="current-password"
-                        type="password"
-                    ></b-form-input>
-                </b-form-group>
-            </b-form>
+            <b-alert v-if="loginForm.error" show variant="danger">{{loginForm.error}}</b-alert>
+            <b-form-group>
+                <b-form-input
+                    @keydown.enter.prevent="doLogin"
+                    v-model="loginForm.username"
+                    placeholder="Username/email"
+                    autocomplete="current-username"
+                ></b-form-input>
+            </b-form-group>
+            <b-form-group>
+                <b-form-input
+                    @keydown.enter.prevent="doLogin"
+                    v-model="loginForm.password"
+                    placeholder="Password"
+                    autocomplete="current-password"
+                    type="password"
+                ></b-form-input>
+            </b-form-group>
             <template v-slot:modal-header-close>
                 <fa-icon icon="times" />
             </template>
             <template v-slot:modal-footer>
                 <b-btn variant="link" class="mr-auto" disabled>Forgot Password</b-btn>
                 <b-btn variant="outline-secondary" v-b-modal.registerModal>Create Account</b-btn>
-                <b-btn @click.prevent="login" variant="primary">Log In</b-btn>
+                <b-btn variant="primary" @click.prevent="doLogin">Log In</b-btn>
+            </template>
+        </b-modal>
+
+        <!-- Create Account Modal -->
+        <b-modal
+            id="registerModal"
+            scrollable
+            no-stacking
+            title="Create Account"
+            @hidden="clearRegister"
+        >
+            <b-form-group :invalid-feedback="registerForm.username.error">
+                <b-form-input
+                    :state="registerForm.username.error.length > 0 ? false : null"
+                    @keydown.enter.prevent="doRegister"
+                    v-model="registerForm.username.value"
+                    placeholder="Username"
+                    autocomplete="username"
+                ></b-form-input>
+            </b-form-group>
+            <b-form-group :invalid-feedback="registerForm.email.error">
+                <b-form-input
+                    :state="registerForm.email.error.length > 0 ? false : null"
+                    @keydown.enter.prevent="doRegister"
+                    type="email"
+                    v-model="registerForm.email.value"
+                    placeholder="Email"
+                    autocomplete="email"
+                ></b-form-input>
+            </b-form-group>
+            <b-form-group :invalid-feedback="registerForm.firstname.error">
+                <b-form-input
+                    :state="registerForm.firstname.error.length > 0 ? false : null"
+                    @keydown.enter.prevent="doRegister"
+                    v-model="registerForm.firstname.value"
+                    placeholder="First name"
+                    autocomplete="given-name"
+                ></b-form-input>
+            </b-form-group>
+            <b-form-group :invalid-feedback="registerForm.lastname.error">
+                <b-form-input
+                    :state="registerForm.lastname.error.length > 0 ? false : null"
+                    @keydown.enter.prevent="doRegister"
+                    v-model="registerForm.lastname.value"
+                    placeholder="Last name"
+                    autocomplete="family-name"
+                ></b-form-input>
+            </b-form-group>
+            <b-form-group :invalid-feedback="registerForm.password.error">
+                <b-form-input
+                    :state="registerForm.password.error.length > 0 ? false : null"
+                    @keydown.enter.prevent="doRegister"
+                    type="password"
+                    v-model="registerForm.password.value"
+                    placeholder="Password"
+                    autocomplete="new-password"
+                ></b-form-input>
+            </b-form-group>
+            <b-form-group :invalid-feedback="registerForm.confirm.error">
+                <b-form-input
+                    :state="registerForm.confirm.error.length > 0 ? false : null"
+                    @keydown.enter.prevent="doRegister"
+                    type="password"
+                    v-model="registerForm.confirm.value"
+                    placeholder="Confirm password"
+                    autocomplete="new-password"
+                ></b-form-input>
+            </b-form-group>
+
+            <template v-slot:modal-header-close>
+                <fa-icon icon="times" />
+            </template>
+            <template v-slot:modal-footer>
+                <b-btn variant="outline-secondary" v-b-modal.loginModal>Log In</b-btn>
+                <b-btn variant="primary" @click.prevent="doRegister">Create Account</b-btn>
             </template>
         </b-modal>
 
@@ -111,8 +185,7 @@
                 </div>
             </transition>
         </div>-->
-        <!-- TODO Create Account Modal -->
-        <div v-if="registerVisible">
+        <!-- <div v-if="registerVisible">
             <transition name="modal">
                 <div class="modal-mask">
                     <div class="modal-wrapper">
@@ -239,7 +312,7 @@
                     </div>
                 </div>
             </transition>
-        </div>
+        </div>-->
     </div>
 </template>
 
@@ -271,52 +344,50 @@ export default {
             registerForm: {
                 username: {
                     value: "",
-                    error: null
+                    error: ""
                 },
                 email: {
                     value: "",
-                    error: null
+                    error: ""
                 },
                 firstname: {
                     value: "",
-                    error: null
+                    error: ""
                 },
                 lastname: {
                     value: "",
-                    error: null
+                    error: ""
                 },
                 password: {
                     value: "",
-                    error: null
+                    error: ""
                 },
                 confirm: {
                     value: "",
-                    error: null
+                    error: ""
                 }
-            },
-            loginVisible: false,
-            registerVisible: false
+            }
         };
     },
-    methods: {
+    methods: { // TODO Add methods for toggle-favorite event to be propogated down
         clearLogin() {
             for (let a in this.loginForm) {
                 this.loginForm[a] = undefined;
             }
         },
         clearRegister() {
-            for (const a in this.registerForm) {
-                this.registerForm[a].error = null;
+            for (let a in this.registerForm) {
+                this.registerForm[a].error = "";
                 this.registerForm[a].value = "";
             }
         },
-        login() {
+        doLogin() {
             login(this.loginForm.username, this.loginForm.password)
                 .then(({ status, data }) => {
                     switch (status) {
                         case 200:
                             localStorage.setItem("token", data.token);
-                            this.getUser()
+                            this.doGetUser()
                                 .then(() => {
                                     this.$bvModal.hide("loginModal");
                                     if (this.redirect) {
@@ -328,7 +399,7 @@ export default {
                             break;
                         case 401:
                             this.$bvModal.hide("loginModal");
-                            this.getUser();
+                            this.doGetUser();
                             break;
                         case 422:
                             console.log(data);
@@ -347,7 +418,7 @@ export default {
                     this._500();
                 });
         },
-        register() {
+        doRegister() {
             register(
                 this.registerForm.username.value,
                 this.registerForm.email.value,
@@ -357,7 +428,6 @@ export default {
                 this.registerForm.confirm.value
             )
                 .then(({ status, data }) => {
-                    console.log(status, data);
                     switch (status) {
                         case 201:
                             this.$bvModal.show("loginModal");
@@ -365,16 +435,49 @@ export default {
                             break;
                         case 401:
                             this.$bvModal.hide("registerModal");
-                            this.getUser();
+                            this.doGetUser();
                             break;
                         case 422:
-                            for (const a in this.registerForm) {
-                                this.registerForm[a].error = (
-                                    data.errors.find(e => e.param === a) || {
-                                        msg: null
-                                    }
-                                ).msg;
-                            }
+                            console.log(data.errors);
+                            this.registerForm.username.error = (
+                                data.errors.find(
+                                    e => e.param === "username"
+                                ) || { msg: "" }
+                            ).msg;
+                            this.registerForm.email.error = (
+                                data.errors.find(e => e.param === "email") || {
+                                    msg: ""
+                                }
+                            ).msg;
+                            this.registerForm.firstname.error = (
+                                data.errors.find(
+                                    e => e.param === "firstname"
+                                ) || { msg: "" }
+                            ).msg;
+                            this.registerForm.lastname.error = (
+                                data.errors.find(
+                                    e => e.param === "lastname"
+                                ) || { msg: "" }
+                            ).msg;
+                            this.registerForm.password.error = (
+                                data.errors.find(
+                                    e => e.param === "password"
+                                ) || { msg: "" }
+                            ).msg;
+                            this.registerForm.confirm.error = (
+                                data.errors.find(
+                                    e => e.param === "confirm"
+                                ) || { msg: "" }
+                            ).msg;
+
+                            // for (const a in this.registerForm) {
+                            //     this.registerForm[a].error = (
+                            //         data.errors.find(e => e.param === a) || {
+                            //             msg: null
+                            //         }
+                            //     ).msg;
+                            //     console.log(this.registerform[a]);
+                            // }
                             break;
                         default:
                             this.$bvModal.hide("registerModal");
@@ -388,7 +491,7 @@ export default {
                     this._500();
                 });
         },
-        logout() {
+        doLogout() {
             logout()
                 .catch(err => {
                     console.error(err);
@@ -403,7 +506,7 @@ export default {
                         this.$router.push("/");
                 });
         },
-        getUser() {
+        doGetUser() {
             return getUser()
                 .then(({ status, data }) => {
                     switch (status) {
@@ -436,7 +539,7 @@ export default {
         }
     },
     mounted() {
-        this.getUser();
+        this.doGetUser();
 
         this.$router.onError(err => {
             if (err.name === "NotLoggedIn") {
@@ -454,7 +557,7 @@ body {
     margin-bottom: 4rem !important;
 }
 
-.modal-mask {
+/* .modal-mask {
     position: fixed;
     z-index: 9998;
     top: 0;
@@ -469,5 +572,5 @@ body {
 .modal-wrapper {
     display: table-cell;
     vertical-align: middle;
-}
+} */
 </style>

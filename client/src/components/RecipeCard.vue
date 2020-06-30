@@ -15,6 +15,8 @@
             <div class="btn-toolbar justify-content-between flex-row-reverse" role="toolbar">
                 <div class="btn-group" role="group">
                     <a
+                        v-b-tooltip.hover.left
+                        title="Print"
                         :disabled="disabled"
                         @click.prevent
                         class="btn btn-sm btn-outline-primary"
@@ -22,16 +24,18 @@
                         target="_blank"
                         :href="`/pdf/${recipe._id}`"
                     >
-                        <i class="fas fa-print"></i>
+                        <fa-icon icon="print" />
                     </a>
                     <button
+                        v-b-tooltip.hover.right
+                        :title="isFavorite() ? 'Unfavorite' : 'Favorite'"
                         :disabled="disabled"
                         @click="toggleFavorite"
                         class="btn btn-sm btn-outline-danger"
                         :class="{'btn-outline-danger': !isFavorite(), 'btn-danger text-white': isFavorite()}"
                         type="button"
                     >
-                        <i :class="{'far': !isFavorite(), 'fas': isFavorite()}" class="fa-heart"></i>
+                        <fa-icon :icon="[isFavorite() ? 'fas' : 'far', 'heart']" />
                     </button>
                 </div>
                 <div
@@ -40,20 +44,24 @@
                     role="group"
                 >
                     <button
+                        v-b-tooltip.hover.left
+                        title="Delete"
                         :disabled="disabled"
                         class="btn btn-sm btn-outline-danger"
                         type="button"
                         @click="deleteRecipe"
                     >
-                        <i class="fas fa-trash-alt"></i>
+                        <fa-icon icon="trash-alt" />
                     </button>
                     <button
+                        v-b-tooltip.hover.right
+                        title="Edit"
                         :disabled="disabled"
                         class="btn btn-sm btn-outline-primary"
                         type="button"
                         @click="$emit('edit', recipe)"
                     >
-                        <i class="fas fa-pencil-alt"></i>
+                        <fa-icon icon="pencil-alt" />
                     </button>
                 </div>
             </div>

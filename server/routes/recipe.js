@@ -21,6 +21,12 @@ router
     .post(
         '/',
         needsAuth,
+        (req, res, next) => {
+            const { title, description, serving, ingredients, steps } = req.body
+            const image = req.file
+            console.log({ title, description, serving, ingredients, steps, image })
+            next()
+        },
         [
             body('title', 'Please enter a title.')
                 .isString()
@@ -41,7 +47,7 @@ router
                 .isString()
                 .trim()
                 .custom((value, { req }) => Unit.exists(value)),
-            body('ingredients', 'Ingredients cannot be empty.').isArray().notEmpty(),
+            body('ingredients', 'Ingredients cannot be empty.').custom(value => value.length && value.length > 0),
             body('ingredients.*.name', 'Name cannot be empty.')
                 .isString()
                 .notEmpty()
@@ -88,7 +94,7 @@ router
                 .isString()
                 .trim()
                 .custom((value, { req }) => Unit.exists(value)),
-            body('ingredients', 'Ingredients cannot be empty.').isArray().notEmpty(),
+            body('ingredients', 'Ingredients cannot be empty.').custom(value => value.length && value.length > 0),
             body('ingredients.*.name', 'Name cannot be empty.')
                 .isString()
                 .notEmpty()
@@ -107,7 +113,8 @@ router
                 .notEmpty()
                 .trim()
                 .isLength({ max: 128 })
-                .withMessage('Step is too long.')
+                .withMessage('Step is too long.'),
+            body('changeImage').optional().toBoolean()
         ],
         editRecipe
     )

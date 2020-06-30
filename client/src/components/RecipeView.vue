@@ -15,7 +15,7 @@
                 type="button"
                 @click="$emit('close')"
             >
-                <i class="fas fa-times"></i>
+                <fa-icon icon="times" />
             </button>
             <a
                 class="btn btn-outline-primary float-right m-1 my-2"
@@ -24,7 +24,7 @@
                 :href="`/pdf/${recipe._id}`"
                 @click.prevent
             >
-                <i class="fas fa-print"></i>
+                <fa-icon icon="print" />
             </a>
         </h1>
         <select class="float-right rounded" v-model="multiplier">
@@ -46,48 +46,11 @@
             data-ride="carousel"
             data-interval="false"
         >
-            <!-- <ol v-if="recipe.images.length > 1" class="carousel-indicators">
-                <li
-                    v-for="(value, index) in recipe.images"
-                    :key="index"
-                    data-target="#recipeCarousel"
-                    :data-slide-to="index"
-                    :class="{'active': index === 0}"
-                ></li>
-            </ol>-->
             <div class="carousel-inner">
                 <div class="carousel-item active">
                     <img :src="recipe.image" class="d-block mx-auto rounded" />
                 </div>
-                <!-- <div
-                    v-for="(value, index) in recipe.images"
-                    :key="index"
-                    class="carousel-item"
-                    :class="{'active': index === 0}"
-                >
-                    <img :src="value" class="d-block mx-auto rounded" />
-                </div>-->
             </div>
-            <!-- <a
-                v-if="recipe.images.length > 1"
-                class="carousel-control-prev"
-                href="#recipeCarousel"
-                role="button"
-                data-slide="prev"
-            >
-                <i class="fas fa-lg fa-chevron-left"></i>
-                <span class="sr-only">Previous</span>
-            </a>
-            <a
-                v-if="recipe.images.length > 1"
-                class="carousel-control-next"
-                href="#recipeCarousel"
-                role="button"
-                data-slide="next"
-            >
-                <i class="fas fa-lg fa-chevron-right"></i>
-                <span class="sr-only">Next</span>
-            </a>-->
         </div>
 
         <h4 class="pt-3">Ingredients</h4>
@@ -105,7 +68,10 @@
                 class="list-group-item list-group-item-action text-wrap"
                 v-for="(value, index) in recipe.steps"
                 :key="index"
-            ><b>{{index + 1}}.</b> {{value}}</li>
+            >
+                <b>{{index + 1}}.</b>
+                {{value}}
+            </li>
         </ol>
     </div>
 </template>

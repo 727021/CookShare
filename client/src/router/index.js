@@ -53,7 +53,9 @@ const routes = [
 ]
 
 const router = new VueRouter({
-    routes
+    routes,
+    linkActiveClass: 'active',
+    linkExactActiveClass: 'active'
 })
 
 router.beforeEach((to, from, next) => {

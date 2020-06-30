@@ -5,7 +5,7 @@
         <RecipeEdit v-else-if="mode === 'edit'" :recipe="currentRecipe" @close="close" />
 
         <div v-else>
-            <h1 class="border-bottom border-black">
+            <h1 class="border-bottom">
                 Recipes
                 <span
                     v-if="loading"
@@ -21,7 +21,7 @@
                     data-toggle="tooltip"
                     title="New Recipe"
                 >
-                    <i class="fas fa-plus"></i>
+                    <fa-icon icon="plus" />
                 </button>
             </h1>
 

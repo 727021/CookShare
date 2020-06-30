@@ -13,7 +13,7 @@
                 @click="showCreate = false"
                 class="btn btn-outline-danger m-1 my-2 float-right"
             >
-                <i class="fas fa-times"></i>
+                <fa-icon icon="times" />
             </button>
             <button
                 v-else
@@ -21,7 +21,7 @@
                 class="btn m-1 my-2 btn-outline-success float-right"
                 data-toggle="dropdown"
             >
-                <i class="fas fa-plus"></i>
+                <fa-icon icon="plus" />
             </button>
             <!-- This isn't a great way to do this, but it works. -->
             <small v-if="showCreate" class="float-right text-muted">
@@ -65,6 +65,8 @@ export default {
     methods: {
         create() {
             console.log("Create cookbook:", this.newName.value);
+
+            this.showCreate = false;
         }
     },
     mounted() {
