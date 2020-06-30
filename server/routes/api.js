@@ -1,5 +1,4 @@
-const { createReadStream, existsSync } = require('fs')
-const { stat } = require('fs/promises')
+const { createReadStream, existsSync, promises: { stat } } = require('fs')
 const { join } = require('path')
 const router = require('express').Router()
 
