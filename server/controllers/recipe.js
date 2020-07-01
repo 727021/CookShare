@@ -48,7 +48,7 @@ exports.createRecipe = async (req, res, next) => {
     if (!errors.isEmpty()) return res.status(422).send({ errors: errors.array() })
 
     const { title, description, serving, ingredients, steps } = req.body
-    const image = req.file ? `/api/uploads/${req.file.filename}` : null
+    const image = req.file ? `/uploads/${req.file.filename}` : null
     console.log({ title, description, serving, ingredients, steps, image })
 
     try {

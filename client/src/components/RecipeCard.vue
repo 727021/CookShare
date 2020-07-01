@@ -1,5 +1,67 @@
 <template>
-    <div class="card">
+    <b-card :img-src="recipe.image" :img-top="recipe.image">
+        <b-card-title class="my-0">
+            <b-btn
+                class="py-0"
+                variant="link"
+                size="lg"
+                @click="$emit('view', recipe)"
+            >{{recipe.title}}</b-btn>
+        </b-card-title>
+        <b-card-body v-if="recipe.description">
+            <b-card-text>{{recipe.description}}</b-card-text>
+        </b-card-body>
+        <template v-slot:footer>
+            <b-btn-toolbar>
+                <b-btn-group
+                    v-if="recipe.author === $parent.$parent.user._id ||recipe.author._id === $parent.$parent.user._id"
+                    size="sm"
+                >
+                    <b-btn
+                        variant="outline-danger"
+                        v-b-tooltip.hover.left
+                        title="Delete"
+                        :disabled="disabled"
+                        @click="deleteRecipe"
+                    >
+                        <fa-icon icon="trash-alt" />
+                    </b-btn>
+                    <b-btn
+                        variant="outline-primary"
+                        v-b-tooltip.hover.right
+                        title="Edit"
+                        :disabled="disabled"
+                        @click="$emit('edit', recipe)"
+                    >
+                        <fa-icon icon="pencil-alt" />
+                    </b-btn>
+                </b-btn-group>
+                <b-btn-group size="sm" class="ml-auto">
+                    <b-btn
+                        variant="outline-primary"
+                        v-b-tooltip.hover.left
+                        title="Print"
+                        :disabled="disabled"
+                        :href="`/pdf/${recipe._id}?access_token=${token()}`"
+                        target="_blank"
+                    >
+                        <fa-icon icon="print" />
+                    </b-btn>
+                    <b-btn
+                        :variant="isFavorite() ? 'danger' : 'outline-danger'"
+                        :text-variant="{'white': isFavorite()}"
+                        v-b-tooltip.hover.right
+                        :title="isFavorite() ? 'Unfavorite' : 'Favorite'"
+                        @click="toggleFavorite"
+                        :disabled="disabled"
+                    >
+                        <fa-icon :icon="[isFavorite() ? 'fas' : 'far', 'heart']" />
+                    </b-btn>
+                </b-btn-group>
+            </b-btn-toolbar>
+        </template>
+    </b-card>
+    <!-- <div class="card">
         <img v-if="recipe.image" :src="recipe.image" class="card-img-top" />
         <div class="card-body">
             <h5 class="card-title">
@@ -66,7 +128,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div>-->
 </template>
 
 <script>
@@ -161,6 +223,9 @@ export default {
                         this.$parent.$parent._500();
                     });
             }
+        },
+        token() {
+            return localStorage.getItem("token");
         }
     }
 };

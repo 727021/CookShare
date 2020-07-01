@@ -10,69 +10,55 @@
                     {{recipe.serving.size}} {{recipe.serving.units}}
                 </small>
             </small>
-            <button
-                class="btn btn-outline-danger float-right m-1 my-2"
-                type="button"
-                @click="$emit('close')"
-            >
+            <b-btn variant="outline-danger" class="float-right m-1 my-2" @click="$emit('close')">
                 <fa-icon icon="times" />
-            </button>
-            <a
-                class="btn btn-outline-primary float-right m-1 my-2"
-                role="button"
+            </b-btn>
+            <b-btn
+                variant="outline-primary"
+                class="float-right m-1 my-2"
+                :href="`/pdf/${recipe._id}?access_token=${token()}`"
                 target="_blank"
-                :href="`/pdf/${recipe._id}`"
-                @click.prevent
             >
                 <fa-icon icon="print" />
-            </a>
+            </b-btn>
         </h1>
-        <select class="float-right rounded" v-model="multiplier">
-            <option :disabled="recipe.serving.count * 0.25 < 1" value="0.25">x0.25</option>
-            <option :disabled="recipe.serving.count * 0.5 < 1" value="0.5">x0.5</option>
-            <option value="1" selected>x1</option>
-            <option value="2">x2</option>
-            <option value="3">x3</option>
-        </select>
-        <textarea
-            class="form-control-plaintext w-75 py-0 ml-3 description"
+        <b-select
+            class="float-right"
+            style="width: 5rem;"
+            v-model="multiplier"
+            :options="[{value: .25, text: 'x0.25', disabled: recipe.serving.count * 0.25 < 1},{value: .5, text: 'x0.5', disabled: recipe.serving.count * 0.5 < 1},{value: 1, text: 'x1'},{value: 2, text: 'x2'},{value: 3, text: 'x3'},]"
+        ></b-select>
+        <b-textarea
             readonly
+            plaintext
+            no-resize
             v-model="recipe.description"
-        ></textarea>
-        <div
-            v-if="recipe.image"
-            id="recipeCarousel"
-            class="carousel slide bg-dark py-2 mt-2"
-            data-ride="carousel"
-            data-interval="false"
-        >
-            <div class="carousel-inner">
-                <div class="carousel-item active">
-                    <img :src="recipe.image" class="d-block mx-auto rounded" />
-                </div>
-            </div>
-        </div>
+            class="w-75 py-0 ml-3"
+        ></b-textarea>
+
+        <b-carousel v-if="recipe.image" class="bg-dark py-2 text-center rounded">
+            <b-carousel-slide>
+                <template v-slot:img>
+                    <img :src="recipe.image" class="rounded" style="height: 20rem;" />
+                </template>
+            </b-carousel-slide>
+        </b-carousel>
 
         <h4 class="pt-3">Ingredients</h4>
-        <ul class="list-group">
-            <li
-                class="list-group-item list-group-item-action"
-                v-for="{amount, units, name} in recipe.ingredients"
-                :key="amount + name"
-            >{{amount * multiplier}} {{!units || !getFullUnit(units) ? '' : getFullUnit(units).abbr}} {{name}}</li>
-        </ul>
+        <b-list-group>
+            <b-list-group-item
+                v-for="({amount, units, name}, index) in recipe.ingredients"
+                :key="index"
+            >{{amount * multiplier}} {{!units || !getFullUnit(units) ? '' : getFullUnit(units).abbr}} {{name}}</b-list-group-item>
+        </b-list-group>
 
         <h4 class="pt-3">Steps</h4>
-        <ol class="list-group">
-            <li
-                class="list-group-item list-group-item-action text-wrap"
-                v-for="(value, index) in recipe.steps"
-                :key="index"
-            >
+        <b-list-group>
+            <b-list-group-item v-for="(step, index) in recipe.steps" :key="index">
                 <b>{{index + 1}}.</b>
-                {{value}}
-            </li>
-        </ol>
+                {{step}}
+            </b-list-group-item>
+        </b-list-group>
     </div>
 </template>
 
@@ -86,13 +72,14 @@ export default {
         multiplier: 1
     }),
     methods: {
-        getFullUnit: unit => Unit.find(unit)
+        getFullUnit: unit => Unit.find(unit),
+        token: () => localStorage.getItem("token")
     }
 };
 </script>
 
 <style scoped>
-.carousel-item > img {
+/* .carousel-item > img {
     height: 20rem;
     width: auto;
 }
@@ -106,5 +93,5 @@ textarea.form-control-plaintext {
     resize: none;
     outline: none;
     cursor: default;
-}
+} */
 </style>

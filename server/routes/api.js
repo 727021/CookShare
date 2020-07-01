@@ -13,25 +13,9 @@ const echoToken = (req, res, next) => {
     res.send({ token: req.token })
 }
 
-const getUpload = async (req, res, next) => {
-    const { filename } = req.params
-    const filePath = join(__dirname, '..', 'uploads', filename)
-    const ext = filename.split('.').pop()
-
-    if (!existsSync(filePath)) return res.status(404).end()
-
-    const { size } = await stat(filePath)
-
-    res.setHeader('Content-Type', `image/${ext.toLowerCase()}`)
-    res.setHeader('Content-Length', size)
-
-    createReadStream(filePath).pipe(res)
-}
-
 router
     .use(corsHeaders)
     .get('/', echoToken)
-    .get('/uploads/:filename', getUpload)
     .use('/auth', require('./auth'))
     .use('/user', require('./user'))
     .use('/recipe', require('./recipe'))

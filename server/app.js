@@ -9,9 +9,11 @@ const verify = promisify(require('jsonwebtoken').verify)
 const bearer = require('express-bearer-token')()
 const { v4 } = require('uuid')
 require('dotenv').config()
+const PDF = require('pdfkit')
+const { needsAuth } = require('./middleware/isAuth')
 
 const { startAll, cleanUploads, cleanFavorites } = require('./util/cron')
-const User = require('./models/user')
+const { User, Recipe, Cookbook } = require('./models/models')
 
 const PORT = process.env.PORT || 3000
 
@@ -42,6 +44,7 @@ const multerOptions = {
 app
     .use(morgan('dev'))
     .use(express.static(path.join(__dirname, 'public')))
+    .use('/uploads', express.static(path.join(__dirname, 'uploads')))
     .use(bodyParser.urlencoded({ extended: false }))
     .use(bodyParser.json())
     .use(multer(multerOptions).single('image'))
@@ -64,6 +67,18 @@ app
         } else next()
     })
     .use('/api', require('./routes/api'))
+    .get('/pdf/:rid', needsAuth, async (req, res, next) => {
+        const recipe = await Recipe.findById(req.params.rid)
+        // TODO verify access to recipe is allowed
+        if (!recipe) return new PDF().end()
+
+        res.setHeader('Content-Disposition', `attachment; filename="${recipe.title}.pdf"`)
+
+        const pdf = new PDF()
+        pdf.pipe(res)
+
+        pdf.fontSize(24).text(recipe.title).fontSize('16').text(recipe._id).end()
+    })
     .use((req, res, next) => {
         res.status(404).send({ url: req.url })
     })
