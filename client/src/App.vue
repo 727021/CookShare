@@ -1,503 +1,69 @@
 <template>
     <div id="app">
         <Header
-            :username="user ? user.username : null"
-            @show-login="$bvModal.show('loginModal')"
-            @show-register="$bvModal.show('registerModal')"
+            :user="user"
+            @show-login="$refs.loginModal.show()"
+            @show-register="$refs.registerModal.show()"
             @logout="doLogout"
         />
-        <router-view />
+        <router-view :user="user" @401="_401" @500="_500" />
         <Footer />
-
-        <!-- Log In Modal -->
-        <b-modal
-            id="loginModal"
-            scrollable
-            no-stacking
-            title="Log In"
-            @hidden="clearLogin"
-        >
-            <b-alert v-if="loginForm.error" show variant="danger">{{loginForm.error}}</b-alert>
-            <b-form-group>
-                <b-form-input
-                    @keydown.enter.prevent="doLogin"
-                    v-model="loginForm.username"
-                    placeholder="Username/email"
-                    autocomplete="current-username"
-                ></b-form-input>
-            </b-form-group>
-            <b-form-group>
-                <b-form-input
-                    @keydown.enter.prevent="doLogin"
-                    v-model="loginForm.password"
-                    placeholder="Password"
-                    autocomplete="current-password"
-                    type="password"
-                ></b-form-input>
-            </b-form-group>
-            <template v-slot:modal-header-close>
-                <fa-icon icon="times" />
-            </template>
-            <template v-slot:modal-footer>
-                <b-btn variant="link" class="mr-auto" disabled>Forgot Password</b-btn>
-                <b-btn variant="outline-secondary" v-b-modal.registerModal>Create Account</b-btn>
-                <b-btn variant="primary" @click.prevent="doLogin">Log In</b-btn>
-            </template>
-        </b-modal>
-
-        <!-- Create Account Modal -->
-        <b-modal
-            id="registerModal"
-            scrollable
-            no-stacking
-            title="Create Account"
-            @hidden="clearRegister"
-        >
-            <b-form-group :invalid-feedback="registerForm.username.error">
-                <b-form-input
-                    :state="registerForm.username.error.length > 0 ? false : null"
-                    @keydown.enter.prevent="doRegister"
-                    v-model="registerForm.username.value"
-                    placeholder="Username"
-                    autocomplete="username"
-                ></b-form-input>
-            </b-form-group>
-            <b-form-group :invalid-feedback="registerForm.email.error">
-                <b-form-input
-                    :state="registerForm.email.error.length > 0 ? false : null"
-                    @keydown.enter.prevent="doRegister"
-                    type="email"
-                    v-model="registerForm.email.value"
-                    placeholder="Email"
-                    autocomplete="email"
-                ></b-form-input>
-            </b-form-group>
-            <b-form-group :invalid-feedback="registerForm.firstname.error">
-                <b-form-input
-                    :state="registerForm.firstname.error.length > 0 ? false : null"
-                    @keydown.enter.prevent="doRegister"
-                    v-model="registerForm.firstname.value"
-                    placeholder="First name"
-                    autocomplete="given-name"
-                ></b-form-input>
-            </b-form-group>
-            <b-form-group :invalid-feedback="registerForm.lastname.error">
-                <b-form-input
-                    :state="registerForm.lastname.error.length > 0 ? false : null"
-                    @keydown.enter.prevent="doRegister"
-                    v-model="registerForm.lastname.value"
-                    placeholder="Last name"
-                    autocomplete="family-name"
-                ></b-form-input>
-            </b-form-group>
-            <b-form-group :invalid-feedback="registerForm.password.error">
-                <b-form-input
-                    :state="registerForm.password.error.length > 0 ? false : null"
-                    @keydown.enter.prevent="doRegister"
-                    type="password"
-                    v-model="registerForm.password.value"
-                    placeholder="Password"
-                    autocomplete="new-password"
-                ></b-form-input>
-            </b-form-group>
-            <b-form-group :invalid-feedback="registerForm.confirm.error">
-                <b-form-input
-                    :state="registerForm.confirm.error.length > 0 ? false : null"
-                    @keydown.enter.prevent="doRegister"
-                    type="password"
-                    v-model="registerForm.confirm.value"
-                    placeholder="Confirm password"
-                    autocomplete="new-password"
-                ></b-form-input>
-            </b-form-group>
-
-            <template v-slot:modal-header-close>
-                <fa-icon icon="times" />
-            </template>
-            <template v-slot:modal-footer>
-                <b-btn variant="outline-secondary" v-b-modal.loginModal>Log In</b-btn>
-                <b-btn variant="primary" @click.prevent="doRegister">Create Account</b-btn>
-            </template>
-        </b-modal>
-
-        <!-- <div v-if="loginVisible">
-            <transition name="modal">
-                <div class="modal-mask">
-                    <div class="modal-wrapper">
-                        <div class="modal-dialog modal-dialog-scrollable" role="document">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Log In</h5>
-                                    <button
-                                        type="button"
-                                        class="close"
-                                        data-dismiss="modal"
-                                        aria-label="Close"
-                                        @click="hideLogin"
-                                    >
-                                        <span aria-hidden="true">
-                                            <i class="fas fa-times"></i>
-                                        </span>
-                                    </button>
-                                </div>
-                                <form @submit.prevent="login">
-                                    <div class="modal-body">
-                                        <div
-                                            v-if="loginForm.error"
-                                            class="alert alert-danger"
-                                        >{{loginForm.error}}</div>
-                                        <div class="form-group">
-                                            <input
-                                                v-model="loginForm.username"
-                                                type="text"
-                                                class="form-control"
-                                                placeholder="Username/email"
-                                                autocomplete="username"
-                                            />
-                                        </div>
-                                        <div class="form-group">
-                                            <input
-                                                v-model="loginForm.password"
-                                                type="password"
-                                                class="form-control"
-                                                placeholder="Password"
-                                                autocomplete="current-password"
-                                            />
-                                        </div>
-                                        <div class="text-center"></div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button
-                                            class="btn btn-link mr-auto"
-                                            disabled
-                                        >Forgot Password</button>
-                                        <button
-                                            type="button"
-                                            class="btn btn-outline-secondary"
-                                            @click.prevent="showRegister"
-                                        >Create Account</button>
-                                        <button type="submit" class="btn btn-primary">Log In</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </transition>
-        </div>-->
-        <!-- <div v-if="registerVisible">
-            <transition name="modal">
-                <div class="modal-mask">
-                    <div class="modal-wrapper">
-                        <div class="modal-dialog modal-dialog-scrollable" role="document">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title">Create Account</h5>
-                                    <button
-                                        type="button"
-                                        class="close"
-                                        data-dismiss="modal"
-                                        aria-label="Close"
-                                        @click="hideRegister"
-                                    >
-                                        <span aria-hidden="true">
-                                            <i class="fas fa-times"></i>
-                                        </span>
-                                    </button>
-                                </div>
-                                <form @submit.prevent="register">
-                                    <div class="modal-body">
-                                        <div class="form-group row">
-                                            <div class="col-12 col-lg-6 mb-3 mb-lg-0">
-                                                <input
-                                                    v-model="registerForm.username.value"
-                                                    :class="{'is-invalid': registerForm.username.error}"
-                                                    type="text"
-                                                    class="form-control"
-                                                    placeholder="Username"
-                                                    autocomplete="username"
-                                                />
-                                                <div
-                                                    v-if="registerForm.username.error"
-                                                    class="invalid-feedback"
-                                                >{{registerForm.username.error}}</div>
-                                            </div>
-                                            <div class="col-12 col-lg-6">
-                                                <input
-                                                    v-model="registerForm.email.value"
-                                                    :class="{'is-invalid': registerForm.email.error}"
-                                                    type="email"
-                                                    class="form-control"
-                                                    placeholder="Email"
-                                                    autocomplete="email"
-                                                />
-                                                <div
-                                                    v-if="registerForm.email.error"
-                                                    class="invalid-feedback"
-                                                >{{registerForm.email.error}}</div>
-                                            </div>
-                                        </div>
-                                        <div class="form-group row">
-                                            <div class="col-12 col-lg-6 mb-3 mb-lg-0">
-                                                <input
-                                                    v-model="registerForm.firstname.value"
-                                                    :class="{'is-invalid': registerForm.firstname.error}"
-                                                    type="text"
-                                                    class="form-control"
-                                                    placeholder="First name"
-                                                    autocomplete="given-name"
-                                                />
-                                                <div
-                                                    v-if="registerForm.firstname.error"
-                                                    class="invalid-feedback"
-                                                >{{registerForm.firstname.error}}</div>
-                                            </div>
-                                            <div class="col-12 col-lg-6">
-                                                <input
-                                                    v-model="registerForm.lastname.value"
-                                                    :class="{'is-invalid': registerForm.lastname.error}"
-                                                    type="text"
-                                                    class="form-control"
-                                                    placeholder="Last name"
-                                                    autocomplete="family-name"
-                                                />
-                                                <div
-                                                    v-if="registerForm.lastname.error"
-                                                    class="invalid-feedback"
-                                                >{{registerForm.lastname.error}}</div>
-                                            </div>
-                                        </div>
-                                        <div class="form-group row">
-                                            <div class="col-12 col-lg-6 mb-3 mb-lg-0">
-                                                <input
-                                                    v-model="registerForm.password.value"
-                                                    :class="{'is-invalid': registerForm.password.error}"
-                                                    type="password"
-                                                    class="form-control"
-                                                    placeholder="Password"
-                                                    autocomplete="new-password"
-                                                />
-                                                <div
-                                                    v-if="registerForm.password.error"
-                                                    class="invalid-feedback"
-                                                >{{registerForm.password.error}}</div>
-                                            </div>
-                                            <div class="col-12 col-lg-6">
-                                                <input
-                                                    v-model="registerForm.confirm.value"
-                                                    :class="{'is-invalid': registerForm.confirm.error}"
-                                                    type="password"
-                                                    class="form-control"
-                                                    placeholder="Confirm password"
-                                                    autocomplete="new-password"
-                                                />
-                                                <div
-                                                    v-if="registerForm.confirm.error"
-                                                    class="invalid-feedback"
-                                                >{{registerForm.confirm.error}}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button
-                                            type="button"
-                                            class="btn btn-outline-secondary"
-                                            @click="showLogin"
-                                        >Log In</button>
-                                        <button type="submit" class="btn btn-primary">Create Account</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </transition>
-        </div>-->
+        <LoginModal
+            ref="loginModal"
+            @show-register="$refs.registerModal.show()"
+            @login-success="finishLogin"
+            @401="doGetUser"
+            @500="_500"
+        />
+        <RegisterModal
+            ref="registerModal"
+            @show-login="$refs.loginModal.show()"
+            @register-success="finishRegister"
+            @401="doGetUser"
+            @500="_500"
+        />
     </div>
 </template>
 
 <script>
-import { isEmail } from "validator";
-import { decode } from "jsonwebtoken";
-
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
+import LoginModal from "./components/LoginModal";
+import RegisterModal from "./components/RegisterModal";
 
-import { register, login, logout } from "./services/AuthService";
+import { logout } from "./services/AuthService";
 import { getUser } from "./services/UserService";
+
+import { SUCCESS, AUTH_ERROR } from "./util/status-codes";
 
 export default {
     name: "app",
     components: {
         Header,
-        Footer
+        Footer,
+        LoginModal,
+        RegisterModal
     },
     data() {
         return {
             redirect: undefined,
-            user: undefined,
-            loginForm: {
-                username: "",
-                password: "",
-                error: null
-            },
-            registerForm: {
-                username: {
-                    value: "",
-                    error: ""
-                },
-                email: {
-                    value: "",
-                    error: ""
-                },
-                firstname: {
-                    value: "",
-                    error: ""
-                },
-                lastname: {
-                    value: "",
-                    error: ""
-                },
-                password: {
-                    value: "",
-                    error: ""
-                },
-                confirm: {
-                    value: "",
-                    error: ""
-                }
-            }
+            user: undefined
         };
     },
-    methods: { // TODO Add methods for toggle-favorite event to be propogated down
-        clearLogin() {
-            for (let a in this.loginForm) {
-                this.loginForm[a] = undefined;
-            }
+    methods: {
+        finishLogin() {
+            this.$refs.loginModal.hide();
+            this.doGetUser().then(() => {
+                if (this.redirect) this.$router.push(this.redirect);
+            });
         },
-        clearRegister() {
-            for (let a in this.registerForm) {
-                this.registerForm[a].error = "";
-                this.registerForm[a].value = "";
-            }
-        },
-        doLogin() {
-            login(this.loginForm.username, this.loginForm.password)
-                .then(({ status, data }) => {
-                    switch (status) {
-                        case 200:
-                            localStorage.setItem("token", data.token);
-                            this.doGetUser()
-                                .then(() => {
-                                    this.$bvModal.hide("loginModal");
-                                    if (this.redirect) {
-                                        this.$router.push(this.redirect);
-                                        this.redirect = undefined;
-                                    }
-                                })
-                                .catch(err => {});
-                            break;
-                        case 401:
-                            this.$bvModal.hide("loginModal");
-                            this.doGetUser();
-                            break;
-                        case 422:
-                            console.log(data);
-                            this.loginForm.error =
-                                data.error || "Invalid Login";
-                            break;
-                        default:
-                            this.$bvModal.hide("loginModal");
-                            this._500();
-                            break;
-                    }
-                })
-                .catch(err => {
-                    console.error(err);
-                    this.$bvModal.hide("loginModal");
-                    this._500();
-                });
-        },
-        doRegister() {
-            register(
-                this.registerForm.username.value,
-                this.registerForm.email.value,
-                this.registerForm.firstname.value,
-                this.registerForm.lastname.value,
-                this.registerForm.password.value,
-                this.registerForm.confirm.value
-            )
-                .then(({ status, data }) => {
-                    switch (status) {
-                        case 201:
-                            this.$bvModal.show("loginModal");
-                            this.loginForm.username = data.username;
-                            break;
-                        case 401:
-                            this.$bvModal.hide("registerModal");
-                            this.doGetUser();
-                            break;
-                        case 422:
-                            console.log(data.errors);
-                            this.registerForm.username.error = (
-                                data.errors.find(
-                                    e => e.param === "username"
-                                ) || { msg: "" }
-                            ).msg;
-                            this.registerForm.email.error = (
-                                data.errors.find(e => e.param === "email") || {
-                                    msg: ""
-                                }
-                            ).msg;
-                            this.registerForm.firstname.error = (
-                                data.errors.find(
-                                    e => e.param === "firstname"
-                                ) || { msg: "" }
-                            ).msg;
-                            this.registerForm.lastname.error = (
-                                data.errors.find(
-                                    e => e.param === "lastname"
-                                ) || { msg: "" }
-                            ).msg;
-                            this.registerForm.password.error = (
-                                data.errors.find(
-                                    e => e.param === "password"
-                                ) || { msg: "" }
-                            ).msg;
-                            this.registerForm.confirm.error = (
-                                data.errors.find(
-                                    e => e.param === "confirm"
-                                ) || { msg: "" }
-                            ).msg;
-
-                            // for (const a in this.registerForm) {
-                            //     this.registerForm[a].error = (
-                            //         data.errors.find(e => e.param === a) || {
-                            //             msg: null
-                            //         }
-                            //     ).msg;
-                            //     console.log(this.registerform[a]);
-                            // }
-                            break;
-                        default:
-                            this.$bvModal.hide("registerModal");
-                            this._500();
-                            break;
-                    }
-                })
-                .catch(err => {
-                    console.error(err);
-                    this.$bvModal.hide("registerModal");
-                    this._500();
-                });
+        finishRegister(username) {
+            this.$refs.loginModal.show(username);
         },
         doLogout() {
             logout()
                 .catch(err => {
-                    console.error(err);
-                    this.$bvModal.hide("loginModal");
-                    this.$bvModal.hide("registerModal");
-                    this._500();
+                    this._500(err);
                 })
                 .finally(() => {
                     this.user = undefined;
@@ -510,27 +76,25 @@ export default {
             return getUser()
                 .then(({ status, data }) => {
                     switch (status) {
-                        case 200:
+                        case SUCCESS:
                             this.user = data;
                             break;
-                        case 401:
+                        case AUTH_ERROR:
                             this._401();
                             break;
                         default:
-                            this.$bvModal.hide("loginModal");
-                            this.$bvModal.hide("registerModal");
                             this._500();
                             break;
                     }
                 })
                 .catch(err => {
-                    console.error(err);
-                    this.$bvModal.hide("loginModal");
-                    this.$bvModal.hide("registerModal");
-                    this._500();
+                    this._500(err);
                 });
         },
-        _500() {
+        _500(err) {
+            if (err) console.error(err);
+            this.$refs.loginForm.hide();
+            this.$refs.registerForm.hide();
             this.$router.push("/500");
         },
         _401() {
@@ -556,21 +120,4 @@ body {
     margin-top: 4rem !important;
     margin-bottom: 4rem !important;
 }
-
-/* .modal-mask {
-    position: fixed;
-    z-index: 9998;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #00000080;
-    display: table;
-    transition: opacity 0.3s ease;
-}
-
-.modal-wrapper {
-    display: table-cell;
-    vertical-align: middle;
-} */
 </style>

@@ -2,71 +2,69 @@
     <div class="container">
         <h1 class="border-bottom">
             Cookbooks
-            <span
+            <b-spinner
                 v-if="loading"
-                class="spinner-border m-2"
+                class="m-2"
                 style="border-width: 4px;"
-                role="status"
-            ></span>
-            <button
-                v-if="showCreate"
-                @click="showCreate = false"
-                class="btn btn-outline-danger m-1 my-2 float-right"
-            >
-                <fa-icon icon="times" />
-            </button>
-            <button
-                v-else
-                @click="newName = {value: '', error: null}; showCreate = true"
-                class="btn m-1 my-2 btn-outline-success float-right"
-                data-toggle="dropdown"
+            ></b-spinner>
+            <b-btn
+                variant="outline-success"
+                class="float-right m-1 my-2"
+                v-b-tooltip.hover.left
+                title="New Cookbook"
+                @click="$refs.createCookbookModal.show()"
             >
                 <fa-icon icon="plus" />
-            </button>
-            <!-- This isn't a great way to do this, but it works. -->
-            <small v-if="showCreate" class="float-right text-muted">
-                <small>
-                    <small>
-                        <small>
-                            <small>{{newName.value.length}}/64</small>
-                        </small>
-                    </small>
-                </small>
-            </small>
-            <input
-                @keydown.enter.prevent="create"
-                @keydown.esc.prevent="showCreate = false"
-                v-if="showCreate"
-                v-model="newName.value"
-                :class="{'is-invalid': newName.error}"
-                type="text"
-                class="form-control float-right w-50 m-1 my-2"
-                placeholder="New Cookbook (ENTER to submit...)"
-                maxlength="64"
-            />
+            </b-btn>
+            <b-btn
+                variant="outline-primary"
+                class="float-right m-1 my-2"
+                v-b-tooltip.hover.left
+                title="Share Cookbook"
+                @click="$refs.shareCookbookModal.show()"
+            >
+                <fa-icon icon="users" />
+            </b-btn>
         </h1>
+
+        <CreateCookbookModal
+            ref="createCookbookModal"
+            :cookbooks="cookbooks"
+            @401="$emit('401')"
+            @500="_500"
+        />
+
+        <ShareCookbookModal
+            ref="shareCookbookModal"
+            :cookbook="sharing"
+            @401="$emit('401')"
+            @500="_500"
+        />
     </div>
 </template>
 
 <script>
+import CreateCookbookModal from "../components/CreateCookbookModal";
+import ShareCookbookModal from "../components/ShareCookbookModal";
+
 export default {
     name: "Cookbooks",
+    props: ["user"],
+    components: {
+        CreateCookbookModal,
+        ShareCookbookModal
+    },
     data() {
         return {
             loading: true,
-            showCreate: false,
-            newName: {
-                value: "",
-                error: null
-            },
-            currentCookbook: null
+            currentCookbook: null,
+            sharing: null,
+            cookbooks: []
         };
     },
     methods: {
-        create() {
-            console.log("Create cookbook:", this.newName.value);
-
-            this.showCreate = false;
+        _500(err) {
+            this.$emit("500", err);
         }
     },
     mounted() {

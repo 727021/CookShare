@@ -1,47 +1,59 @@
 <template>
-    <div class="container">
-        <RecipeView v-if="mode === 'view'" :recipe="currentRecipe" @close="close" />
+    <b-container>
+        <RecipeView
+            v-if="mode === 'view'"
+            :recipe="currentRecipe"
+            @close="close"
+        />
 
-        <RecipeEdit v-else-if="mode === 'edit'" :recipe="currentRecipe" @close="close" />
+        <RecipeEdit
+            v-else-if="mode === 'edit'"
+            :recipe="currentRecipe"
+            :recipes="recipes"
+            @close="close"
+            @401="$emit('401')"
+            @500="_500"
+        />
 
         <div v-else>
             <h1 class="border-bottom">
                 Recipes
-                <span
-                    v-if="loading"
-                    class="spinner-border m-2"
+                <b-spinner
+                    class="m-2"
                     style="border-width: 4px;"
-                    role="status"
-                ></span>
-                <button
+                    v-if="loading"
+                />
+                <b-btn
                     v-else
+                    variant="outline-success"
                     @click="openCreate"
-                    type="button"
-                    class="float-right btn btn-outline-success m-1 my-2"
-                    data-toggle="tooltip"
+                    class="float-right m-1 my-2"
+                    v-b-tooltip.hover.left
                     title="New Recipe"
                 >
                     <fa-icon icon="plus" />
-                </button>
+                </b-btn>
             </h1>
 
-            <div v-if="recipes && recipes.length > 0">
-                <div class="card-columns">
-                    <RecipeCard
-                        v-for="recipe in recipes"
-                        :key="recipe._id"
-                        :recipe="recipe"
-                        @view="openView"
-                        @edit="openEdit"
-                    />
-                </div>
-            </div>
+            <b-card-group v-if="recipes && recipes.length > 0" columns>
+                <RecipeCard
+                    v-for="recipe in recipes"
+                    :key="recipe._id"
+                    :recipe="recipe"
+                    :recipes="recipes"
+                    :user="user"
+                    @view="openView"
+                    @edit="openEdit"
+                    @401="$emit('401')"
+                    @500="_500"
+                />
+            </b-card-group>
 
-            <div v-else-if="recipes && recipes.length === 0">
-                <h5 class="text-center">No recipes</h5>
-            </div>
+            <h5 v-else-if="recipes && recipes.length === 0" class="text-center">
+                No recipes
+            </h5>
         </div>
-    </div>
+    </b-container>
 </template>
 
 <script>
@@ -52,9 +64,11 @@ import RecipeEdit from "../components/RecipeEdit";
 import { getRecipes } from "../services/RecipeService";
 
 import { Unit } from "../util/units";
+import { SUCCESS, AUTH_ERROR } from "../util/status-codes";
 
 export default {
     name: "Recipes",
+    props: ["user"],
     components: {
         RecipeCard,
         RecipeView,
@@ -71,7 +85,7 @@ export default {
     methods: {
         openCreate() {
             this.currentRecipe = {
-                title: "New Recipe",
+                title: "",
                 description: "",
                 serving: {
                     count: 1,
@@ -80,12 +94,12 @@ export default {
                 },
                 ingredients: [
                     {
-                        name: "New ingredient",
+                        name: "",
                         amount: 1,
                         units: undefined
                     }
                 ],
-                steps: ["Step 1"],
+                steps: [""],
                 image: undefined
             };
             this.mode = "edit";
@@ -101,24 +115,29 @@ export default {
         close() {
             this.mode = null;
             this.currentRecipe = null;
+        },
+        _500(err) {
+            this.$emit("500", err);
         }
     },
     mounted() {
         getRecipes()
             .then(({ status, data }) => {
                 switch (status) {
-                    case 200:
+                    case SUCCESS:
                         this.recipes = [...data];
                         this.loading = false;
                         break;
+                    case AUTH_ERROR:
+                        this.$emit("401");
+                        break;
                     default:
-                        this.$parent._500();
+                        this._500();
                         break;
                 }
             })
             .catch(err => {
-                console.error(err);
-                this.$parent._500();
+                this._500(err);
             });
     }
 };

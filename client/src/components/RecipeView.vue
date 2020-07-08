@@ -77,21 +77,3 @@ export default {
     }
 };
 </script>
-
-<style scoped>
-/* .carousel-item > img {
-    height: 20rem;
-    width: auto;
-}
-.carousel-control-prev {
-    background: linear-gradient(to right, black, rgba(0, 0, 0, 0));
-}
-.carousel-control-next {
-    background: linear-gradient(to left, black, rgba(0, 0, 0, 0));
-}
-textarea.form-control-plaintext {
-    resize: none;
-    outline: none;
-    cursor: default;
-} */
-</style>

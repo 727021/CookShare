@@ -5,12 +5,14 @@ const { isAdmin } = require('../util/isAuth')
 
 const sortComments = (a, b) => (a.date > b.date ? -1 : 1)
 
+// TODO Replace some 409 statuses with 401
+
 exports.getCookbooks = async (req, res, next) => {
     try {
         const books = await Cookbook.find()
             .or([ { owner: req.user }, { 'shared.user': req.user, 'shared.status.accepted': true } ])
             .populate('owner', 'username')
-            .populate('recipes.recipe', 'author')
+            .populate('recipes.recipe', 'author title')
             .populate('recipes.recipe.author', 'username')
 
         res.status(200).send(books || [])
@@ -158,7 +160,7 @@ exports.removeRecipe = async (req, res, next) => {
         const updatedBook = await book.save()
         if (!updatedBook) return res.status(409).send({ error: 'Failed to add recipe' })
 
-        res.status(200).send(updatedBook)
+        res.status(204).end()
     } catch (err) {
         next(err)
     }
