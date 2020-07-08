@@ -34,6 +34,8 @@ router
             body('title', 'Invalid title')
                 .isString()
                 .trim()
+                .notEmpty()
+                .withMessage('Title cannot be empty.')
                 .isLength({ max: 64 })
                 .withMessage('Title cannot be longer than 64 characters.')
         ],

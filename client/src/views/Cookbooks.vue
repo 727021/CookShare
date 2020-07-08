@@ -40,26 +40,53 @@
             @401="$emit('401')"
             @500="_500"
         />
+
+        <b-card-group v-if="cookbooks && cookbooks.length > 0" columns>
+            <CookbookCard
+                v-for="cookbook in cookbooks"
+                :key="cookbook._id"
+                :cookbook="cookbook"
+                :cookbooks="cookbooks"
+                :user="user"
+            />
+        </b-card-group>
+
+        <h5 v-else-if="cookbooks && cookbooks.length === 0" class="text-center">
+            No cookbooks
+        </h5>
     </div>
 </template>
 
 <script>
 import CreateCookbookModal from "../components/CreateCookbookModal";
 import ShareCookbookModal from "../components/ShareCookbookModal";
+import CookbookCard from "../components/CookbookCard";
+
+import { getCookbooks } from "../services/CookbookService";
+
+import {
+    SUCCESS,
+    CREATED,
+    EMPTY,
+    AUTH_ERROR,
+    CONFLICT,
+    DATA_ERROR
+} from "../util/status-codes";
 
 export default {
     name: "Cookbooks",
     props: ["user"],
     components: {
         CreateCookbookModal,
-        ShareCookbookModal
+        ShareCookbookModal,
+        CookbookCard
     },
     data() {
         return {
             loading: true,
             currentCookbook: null,
             sharing: null,
-            cookbooks: []
+            cookbooks: null
         };
     },
     methods: {
@@ -68,7 +95,25 @@ export default {
         }
     },
     mounted() {
-        this.loading = false;
+        getCookbooks()
+            .then(({ status, data }) => {
+                switch (status) {
+                    case SUCCESS:
+                        this.cookbooks = data;
+                        this.loading = false;
+                        break;
+                    case AUTH_ERROR:
+                        this.$router.push("/");
+                        this.$emit("401");
+                        break;
+                    default:
+                        this._500();
+                        break;
+                }
+            })
+            .catch(err => {
+                this._500(err);
+            });
     }
 };
 </script>

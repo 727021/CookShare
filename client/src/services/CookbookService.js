@@ -7,7 +7,7 @@ const url = '/api/cookbook'
 // Cookbooks
 const getCookbooks = () => Resolve(Get(url))
 const getCookbook = cid => Resolve(Get(`${url}/${cid}`))
-const createCoobook = title => Resolve(Post(url, { title }), CREATED)
+const createCookbook = title => Resolve(Post(url, { title }), CREATED)
 const editCookbook = (cid, title) => Resolve(Put(`${url}/${cid}`, { title }))
 const deleteCookbook = cid => Resolve(Delete(`${url}/${cid}`), EMPTY)
 
@@ -30,7 +30,7 @@ const removeSharing = (cid, uid) => Resolve(Delete(`${url}/${cid}/share/${uid}`)
 export {
     getCookbooks,
     getCookbook,
-    createCoobook,
+    createCookbook,
     editCookbook,
     deleteCookbook,
     addRecipe,

@@ -12,6 +12,7 @@
                 v-model="title"
                 :state="error ? false : null"
                 maxlength="64"
+                @keydown.enter.prevent="submit"
             ></b-input>
             <template v-slot:invalid-feedback>
                 <span class="float-left">{{ error }}</span>
@@ -31,6 +32,15 @@
 </template>
 
 <script>
+import { createCookbook } from "../services/CookbookService.js";
+
+import {
+    CREATED,
+    AUTH_ERROR,
+    DATA_ERROR,
+    CONFLICT
+} from "../util/status-codes";
+
 export default {
     name: "NewCookbookModal",
     props: ["cookbooks"],
@@ -50,7 +60,34 @@ export default {
             this.error = "";
         },
         submit() {
-            // Create the cookbook
+            this.error = "";
+            createCookbook(this.title)
+                .then(({ status, data }) => {
+                    switch (status) {
+                        case CREATED:
+                            console.log(data);
+                            this.cookbooks.push(data);
+                            this.hide();
+                            break;
+                        case AUTH_ERROR:
+                            this.$emit("401");
+                            this.hide();
+                            this.$router.push("/");
+                            break;
+                        case DATA_ERROR:
+                            this.error = data.errors[0].msg;
+                            break;
+                        case CONFLICT:
+                            this.error = data.error;
+                            break;
+                        default:
+                            this.$emit("500");
+                            break;
+                    }
+                })
+                .catch(err => {
+                    this.$emit("500", err);
+                });
         }
     }
 };

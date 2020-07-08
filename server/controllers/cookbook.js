@@ -69,12 +69,16 @@ exports.createCookbook = async (req, res, next) => {
         const book = await new Cookbook({
             title,
             owner: req.user
-        })
-            .save()
-            .populate('owner', 'username')
-        if (!book) return res.status(409).send({ error: 'Failed to create cookbook.' })
+        }).save()
 
-        res.status(201).send(book)
+        const newBook = await Cookbook.findById(book._id)
+            .populate('owner', 'username')
+            .populate('recipes.recipe')
+            .populate('recipes.recipe.author', 'username')
+            .populate('recipes.comments.author', 'username')
+        if (!newBook) return res.status(409).send({ error: 'Failed to create cookbook.' })
+
+        res.status(201).send(newBook)
     } catch (err) {
         next(err)
     }
