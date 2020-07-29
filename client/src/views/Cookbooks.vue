@@ -27,9 +27,15 @@
 
         <ShareCookbookModal
             ref="shareCookbookModal"
-            :cookbook="sharing"
             @401="$emit('401')"
             @500="_500"
+        />
+
+        <AddRecipeModal
+            ref="addRecipeModal"
+            @401="$emit('401')"
+            @500="_500"
+            @add="doAddRecipe"
         />
 
         <b-card-group v-if="cookbooks && cookbooks.length > 0" columns>
@@ -41,6 +47,7 @@
                 :user="user"
                 @open="null /* TODO Implement opening a cookbook */"
                 @sharing="null /* TODO Implement opening cookbook sharing */"
+                @add="$refs.addRecipeModal.show(cookbook)"
                 @deleteCookbook="doDeleteCookbook"
                 @500="_500"
                 @401="$emit('401')"
@@ -57,8 +64,13 @@
 import CreateCookbookModal from "../components/CreateCookbookModal";
 import ShareCookbookModal from "../components/ShareCookbookModal";
 import CookbookCard from "../components/CookbookCard";
+import AddRecipeModal from "../components/AddRecipeModal";
 
-import { getCookbooks, deleteCookbook } from "../services/CookbookService";
+import {
+    getCookbooks,
+    deleteCookbook,
+    addRecipe,
+} from "../services/CookbookService";
 
 import {
     SUCCESS,
@@ -76,13 +88,13 @@ export default {
         CreateCookbookModal,
         ShareCookbookModal,
         CookbookCard,
+        AddRecipeModal,
     },
     data() {
         return {
             loading: true,
             currentCookbook: null,
             cookbooks: null,
-            sharing: null,
         };
     },
     methods: {
@@ -97,6 +109,38 @@ export default {
                             break;
                         case AUTH_ERROR:
                             this.$emit("401");
+                            break;
+                        default:
+                            this._500();
+                            break;
+                    }
+                })
+                .catch((err) => {
+                    this._500(err);
+                });
+        },
+        doAddRecipe(cid, rid) {
+            addRecipe(cid, rid)
+                .then(({ status, data }) => {
+                    switch (status) {
+                        case CREATED:
+                            this.cookbooks[
+                                this.cookbooks.findIndex((c) => c._id === cid)
+                            ].recipes = JSON.parse(
+                                JSON.stringify(data.recipes)
+                            );
+                            this.$refs.addRecipeModal.hide();
+                            break;
+                        case DATA_ERROR:
+                            this.$refs.addRecipeModal.setError(
+                                data.errors[0].msg
+                            );
+                            break;
+                        case AUTH_ERROR:
+                            this.$emit("401");
+                            break;
+                        case CONFLICT:
+                            this.$refs.addRecipeModal.setError(data.error);
                             break;
                         default:
                             this._500();

@@ -19,20 +19,26 @@
 <script>
 export default {
     name: "ShareCookbookModal",
-    props: ["cookbook"],
     data: () => ({
-        sharing: null
+        cookbook: null,
+        sharing: null,
     }),
     methods: {
-        show() {
+        show(cookbook) {
+            this.cookbook = cookbook;
             this.$bvModal.show("shareCookbook");
         },
         hide() {
             this.$bvModal.hide("shareCookbook");
+            this.cookbook = null;
+            this.sharing = null;
         },
         shown() {
             // Get sharing for cookbook
-        }
-    }
+        },
+        submit() {
+            // Update sharing
+        },
+    },
 };
 </script>

@@ -42,14 +42,19 @@
 <script>
 import { login } from "../services/AuthService";
 
-import { SUCCESS, AUTH_ERROR, DATA_ERROR } from "../util/status-codes";
+import {
+    SUCCESS,
+    AUTH_ERROR,
+    DATA_ERROR,
+    CONFLICT,
+} from "../util/status-codes";
 
 export default {
     name: "LoginModal",
     data: () => ({
         username: "",
         password: "",
-        error: ""
+        error: "",
     }),
     methods: {
         clear() {
@@ -69,6 +74,7 @@ export default {
                             this.$emit("401");
                             break;
                         case DATA_ERROR:
+                        case CONFLICT:
                             this.error = data.error || "Invalid Login";
                             break;
                         default:
@@ -76,7 +82,7 @@ export default {
                             break;
                     }
                 })
-                .catch(err => {
+                .catch((err) => {
                     this.$emit("500", err);
                 });
         },
@@ -86,7 +92,7 @@ export default {
         },
         hide() {
             this.$bvModal.hide("loginModal");
-        }
-    }
+        },
+    },
 };
 </script>

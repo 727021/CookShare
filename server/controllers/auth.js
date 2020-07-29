@@ -37,9 +37,9 @@ exports.login = async (req, res, next) => {
 
     try {
         const user = await User.findOne(username ? { username } : { email }, '-authToken')
-        if (!user) return res.status(401).send({ error: 'Invalid login' })
+        if (!user) return res.status(409).send({ error: 'Invalid login' })
         const same = await compare(password, user.password)
-        if (!same) return res.status(401).send({ error: 'Invalid login' })
+        if (!same) return res.status(409).send({ error: 'Invalid login' })
         user.seen = Date.now()
         const token = await sign(
             {

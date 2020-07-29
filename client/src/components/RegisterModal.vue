@@ -6,6 +6,7 @@
         title="Create Account"
         @hidden="clear"
     >
+        <b-alert v-if="error" show variant="danger">{{ error }}</b-alert>
         <b-form-group :invalid-feedback="errors.username">
             <b-form-input
                 :state="errors.username.length > 0 ? false : null"
@@ -81,7 +82,12 @@
 <script>
 import { register } from "../services/AuthService";
 
-import { CREATED, AUTH_ERROR, DATA_ERROR } from "../util/status-codes.js";
+import {
+    CREATED,
+    AUTH_ERROR,
+    DATA_ERROR,
+    CONFLICT,
+} from "../util/status-codes.js";
 
 export default {
     name: "RegisterModal",
@@ -92,7 +98,7 @@ export default {
             firstname: "",
             lastname: "",
             password: "",
-            confirm: ""
+            confirm: "",
         },
         errors: {
             username: "",
@@ -100,15 +106,18 @@ export default {
             firstname: "",
             lastname: "",
             password: "",
-            confirm: ""
-        }
+            confirm: "",
+        },
+        error: "",
     }),
     methods: {
         clear() {
             for (let a in this.values) this.values[a] = "";
             for (let a in this.errors) this.errors[a] = "";
+            this.error = "";
         },
         submit() {
+            this.error = "";
             register(
                 this.values.username,
                 this.values.email,
@@ -131,17 +140,20 @@ export default {
                         case DATA_ERROR:
                             for (let a in this.errors)
                                 this.errors[a] = (
-                                    data.errors.find(e => e.param === a) || {
-                                        msg: ""
+                                    data.errors.find((e) => e.param === a) || {
+                                        msg: "",
                                     }
                                 ).msg;
+                            break;
+                        case CONFLICT:
+                            this.error = data.error;
                             break;
                         default:
                             this.$emit("500");
                             break;
                     }
                 })
-                .catch(err => {
+                .catch((err) => {
                     this.$emit("500", err);
                 });
         },
@@ -150,7 +162,7 @@ export default {
         },
         hide() {
             this.$bvModal.hide("registerModal");
-        }
-    }
+        },
+    },
 };
 </script>

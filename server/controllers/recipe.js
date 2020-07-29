@@ -1,6 +1,6 @@
 const { validationResult } = require('express-validator')
 
-const Recipe = require('../models/recipe')
+const { Recipe, Cookbook } = require('../models/models')
 const { isAdmin } = require('../util/isAuth')
 const Unit = require('../util/units')
 
@@ -113,6 +113,14 @@ exports.deleteRecipe = async (req, res, next) => {
             ? await Recipe.findByIdAndDelete(rid)
             : await Recipe.findOneAndDelete({ _id: rid, author: req.user })
         if (!recipe) return res.status(409).send({ error: 'Failed to delete recipe.' })
+
+        // Remove recipe from cookbooks
+        const cookbooks = await Cookbook.find({ 'recipes.recipe': rid })
+        cookbooks.forEach(c => {
+            c.recipes = c.recipes.filter(r => r.recipe.toString() !== rid.toString())
+            c.save()
+        })
+
         res.status(204).end()
     } catch (err) {
         next(err)

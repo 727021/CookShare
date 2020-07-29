@@ -49,6 +49,16 @@
                         {{ cookbook.owner.username }}
                     </b-btn>
                 </b-btn-group>
+                <b-btn-group size="sm" class="ml-auto">
+                    <b-btn
+                        variant="outline-success"
+                        v-b-tooltip.hover.left
+                        title="Add Recipe"
+                        @click="$emit('add', cookbook)"
+                    >
+                        <fa-icon icon="plus" />
+                    </b-btn>
+                </b-btn-group>
             </b-btn-toolbar>
         </template>
     </b-card>
