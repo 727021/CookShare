@@ -16,15 +16,6 @@
             >
                 <fa-icon icon="plus" />
             </b-btn>
-            <b-btn
-                variant="outline-primary"
-                class="float-right m-1 my-2"
-                v-b-tooltip.hover.left
-                title="Share Cookbook"
-                @click="$refs.shareCookbookModal.show()"
-            >
-                <fa-icon icon="users" />
-            </b-btn>
         </h1>
 
         <CreateCookbookModal
@@ -48,6 +39,11 @@
                 :cookbook="cookbook"
                 :cookbooks="cookbooks"
                 :user="user"
+                @open="null /* TODO Implement opening a cookbook */"
+                @sharing="null /* TODO Implement opening cookbook sharing */"
+                @deleteCookbook="doDeleteCookbook"
+                @500="_500"
+                @401="$emit('401')"
             />
         </b-card-group>
 
@@ -62,7 +58,7 @@ import CreateCookbookModal from "../components/CreateCookbookModal";
 import ShareCookbookModal from "../components/ShareCookbookModal";
 import CookbookCard from "../components/CookbookCard";
 
-import { getCookbooks } from "../services/CookbookService";
+import { getCookbooks, deleteCookbook } from "../services/CookbookService";
 
 import {
     SUCCESS,
@@ -70,7 +66,7 @@ import {
     EMPTY,
     AUTH_ERROR,
     CONFLICT,
-    DATA_ERROR
+    DATA_ERROR,
 } from "../util/status-codes";
 
 export default {
@@ -79,20 +75,41 @@ export default {
     components: {
         CreateCookbookModal,
         ShareCookbookModal,
-        CookbookCard
+        CookbookCard,
     },
     data() {
         return {
             loading: true,
             currentCookbook: null,
+            cookbooks: null,
             sharing: null,
-            cookbooks: null
         };
     },
     methods: {
+        doDeleteCookbook(cookbook) {
+            deleteCookbook(cookbook._id)
+                .then(({ status }) => {
+                    switch (status) {
+                        case EMPTY:
+                            this.cookbooks = this.cookbooks.filter(
+                                (c) => c._id !== cookbook._id
+                            );
+                            break;
+                        case AUTH_ERROR:
+                            this.$emit("401");
+                            break;
+                        default:
+                            this._500();
+                            break;
+                    }
+                })
+                .catch((err) => {
+                    this._500(err);
+                });
+        },
         _500(err) {
             this.$emit("500", err);
-        }
+        },
     },
     mounted() {
         getCookbooks()
@@ -111,9 +128,9 @@ export default {
                         break;
                 }
             })
-            .catch(err => {
+            .catch((err) => {
                 this._500(err);
             });
-    }
+    },
 };
 </script>

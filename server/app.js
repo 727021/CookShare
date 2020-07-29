@@ -10,6 +10,9 @@ const bearer = require('express-bearer-token')()
 const { v4 } = require('uuid')
 require('dotenv').config()
 const PDF = require('pdfkit')
+const helmet = require('helmet')()
+const compression = require('compression')()
+
 const { needsAuth } = require('./middleware/isAuth')
 
 const { startAll, cleanUploads, cleanFavorites } = require('./util/cron')
@@ -43,6 +46,8 @@ const multerOptions = {
 
 app
     .use(morgan('dev'))
+    .use(helmet)
+    .use(compression)
     .use(express.static(path.join(__dirname, 'public')))
     .use('/uploads', express.static(path.join(__dirname, 'uploads')))
     .use(bodyParser.urlencoded({ extended: false }))
@@ -77,6 +82,7 @@ app
         const pdf = new PDF()
         pdf.pipe(res)
 
+        // TODO Actually write the recipe to the PDF
         pdf.fontSize(24).text(recipe.title).fontSize('16').text(recipe._id).end()
     })
     .use((req, res, next) => {

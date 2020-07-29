@@ -17,7 +17,7 @@
                 <b-btn-group
                     v-if="
                         recipe.author === user._id ||
-                            recipe.author._id === user._id
+                        recipe.author._id === user._id
                     "
                     size="sm"
                 >
@@ -25,8 +25,7 @@
                         variant="outline-danger"
                         v-b-tooltip.hover.left
                         title="Delete"
-                        :disabled="disabled"
-                        @click="deleteRecipe"
+                        @click="$emit('deleteRecipe', recipe)"
                     >
                         <fa-icon icon="trash-alt" />
                     </b-btn>
@@ -34,10 +33,14 @@
                         variant="outline-primary"
                         v-b-tooltip.hover.right
                         title="Edit"
-                        :disabled="disabled"
                         @click="$emit('edit', recipe)"
                     >
                         <fa-icon icon="pencil-alt" />
+                    </b-btn>
+                </b-btn-group>
+                <b-btn-group v-else size="sm">
+                    <b-btn variant="link" disabled @click.prevent>
+                        {{ recipe.author.username }}
                     </b-btn>
                 </b-btn-group>
                 <b-btn-group size="sm" class="ml-auto">
@@ -45,7 +48,6 @@
                         variant="outline-primary"
                         v-b-tooltip.hover.left
                         title="Print"
-                        :disabled="disabled"
                         :href="`/pdf/${recipe._id}?access_token=${token()}`"
                         target="_blank"
                     >
@@ -57,7 +59,6 @@
                         v-b-tooltip.hover.right
                         :title="isFavorite() ? 'Unfavorite' : 'Favorite'"
                         @click="toggleFavorite"
-                        :disabled="disabled"
                     >
                         <fa-icon
                             :icon="[isFavorite() ? 'fas' : 'far', 'heart']"
@@ -78,39 +79,10 @@ import { EMPTY, CREATED, AUTH_ERROR } from "../util/status-codes";
 export default {
     name: "RecipeCard",
     props: ["recipe", "recipes", "user"],
-    data() {
-        return {
-            disabled: false
-        };
-    },
     methods: {
         isFavorite() {
             const id = this.recipe._id;
-            return this.user.favorites.some(r => r === id);
-        },
-        deleteRecipe() {
-            // Disable buttons
-            this.disabled = true;
-            // Send request to server
-            deleteRecipe(this.recipe)
-                .then(({ status }) => {
-                    switch (status) {
-                        case EMPTY:
-                            this.recipes = this.recipes.filter(
-                                r => r._id !== this.recipe._id
-                            );
-                            break;
-                        case AUTH_ERROR:
-                            this.$emit("401");
-                            break;
-                        default:
-                            this.$emit("500");
-                            break;
-                    }
-                })
-                .catch(err => {
-                    this.$emit("500", err);
-                });
+            return this.user.favorites.some((r) => r === id);
         },
         toggleFavorite() {
             const i = this.user.favorites.indexOf(this.recipe._id);
@@ -131,7 +103,7 @@ export default {
                                 break;
                         }
                     })
-                    .catch(err => {
+                    .catch((err) => {
                         this.$emit("500", err);
                     });
             } else {
@@ -151,14 +123,14 @@ export default {
                                 break;
                         }
                     })
-                    .catch(err => {
+                    .catch((err) => {
                         this.$emit("500", err);
                     });
             }
         },
         token() {
             return localStorage.getItem("token");
-        }
-    }
+        },
+    },
 };
 </script>

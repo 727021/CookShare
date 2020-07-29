@@ -44,8 +44,10 @@
                     :user="user"
                     @view="openView"
                     @edit="openEdit"
+                    @deleteRecipe="doDeleteRecipe"
                     @401="$emit('401')"
                     @500="_500"
+                    :ref="recipe._id"
                 />
             </b-card-group>
 
@@ -61,10 +63,10 @@ import RecipeCard from "../components/RecipeCard";
 import RecipeView from "../components/RecipeView";
 import RecipeEdit from "../components/RecipeEdit";
 
-import { getRecipes } from "../services/RecipeService";
+import { getRecipes, deleteRecipe } from "../services/RecipeService";
 
 import { Unit } from "../util/units";
-import { SUCCESS, AUTH_ERROR } from "../util/status-codes";
+import { SUCCESS, AUTH_ERROR, EMPTY } from "../util/status-codes";
 
 export default {
     name: "Recipes",
@@ -72,14 +74,14 @@ export default {
     components: {
         RecipeCard,
         RecipeView,
-        RecipeEdit
+        RecipeEdit,
     },
     data() {
         return {
             loading: true,
             recipes: null,
             currentRecipe: null, // Recipe object
-            mode: null // null | 'edit' | 'view'
+            mode: null, // null | 'edit' | 'view'
         };
     },
     methods: {
@@ -90,17 +92,17 @@ export default {
                 serving: {
                     count: 1,
                     size: 1,
-                    units: undefined
+                    units: undefined,
                 },
                 ingredients: [
                     {
                         name: "",
                         amount: 1,
-                        units: undefined
-                    }
+                        units: undefined,
+                    },
                 ],
                 steps: [""],
-                image: undefined
+                image: undefined,
             };
             this.mode = "edit";
         },
@@ -112,13 +114,34 @@ export default {
             this.currentRecipe = recipe;
             this.mode = "view";
         },
+        doDeleteRecipe(recipe) {
+            deleteRecipe(recipe)
+                .then(({ status }) => {
+                    switch (status) {
+                        case EMPTY:
+                            this.recipes = this.recipes.filter(
+                                (r) => r._id !== recipe._id
+                            );
+                            break;
+                        case AUTH_ERROR:
+                            this.$emit("401");
+                            break;
+                        default:
+                            this._500();
+                            break;
+                    }
+                })
+                .catch((err) => {
+                    this._500(err);
+                });
+        },
         close() {
             this.mode = null;
             this.currentRecipe = null;
         },
         _500(err) {
             this.$emit("500", err);
-        }
+        },
     },
     mounted() {
         getRecipes()
@@ -136,9 +159,9 @@ export default {
                         break;
                 }
             })
-            .catch(err => {
+            .catch((err) => {
                 this._500(err);
             });
-    }
+    },
 };
 </script>
