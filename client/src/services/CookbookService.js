@@ -12,6 +12,7 @@ const editCookbook = (cid, title) => Resolve(Put(`${url}/${cid}`, { title }))
 const deleteCookbook = cid => Resolve(Delete(`${url}/${cid}`), EMPTY)
 
 // Recipes
+const getRecipes = cid => Resolve(Get(`${url}/${cid}/recipe`))
 const addRecipe = (cid, rid) => Resolve(Post(`${url}/${cid}/recipe/${rid}`), CREATED)
 const removeRecipe = (cid, rid) => Resolve(Delete(`${url}/${cid}/recipe/${rid}`), EMPTY)
 
@@ -33,6 +34,7 @@ export {
     createCookbook,
     editCookbook,
     deleteCookbook,
+    getRecipes,
     addRecipe,
     removeRecipe,
     getComments,

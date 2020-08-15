@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-        <h1 class="border-bottom">
+        <h1 v-if="!currentCookbook" class="border-bottom">
             Cookbooks
             <b-spinner
                 v-if="loading"
@@ -8,6 +8,7 @@
                 style="border-width: 4px;"
             ></b-spinner>
             <b-btn
+                v-else
                 variant="outline-success"
                 class="float-right m-1 my-2"
                 v-b-tooltip.hover.left
@@ -25,12 +26,6 @@
             @500="_500"
         />
 
-        <ShareCookbookModal
-            ref="shareCookbookModal"
-            @401="$emit('401')"
-            @500="_500"
-        />
-
         <AddRecipeModal
             ref="addRecipeModal"
             @401="$emit('401')"
@@ -38,17 +33,28 @@
             @add="doAddRecipe"
         />
 
-        <b-card-group v-if="cookbooks && cookbooks.length > 0" columns>
+        <CookbookView
+            ref="cookbookView"
+            v-if="currentCookbook"
+            :cookbook="currentCookbook"
+            :user="user"
+            @401="$emit('401')"
+            @500="_500"
+            @close-cookbook="currentCookbook = null"
+            @add-recipe="$refs.addRecipeModal.show(currentCookbook)"
+            @remove-recipe="doRemoveRecipe"
+        />
+
+        <b-card-group v-else-if="cookbooks && cookbooks.length > 0" columns>
             <CookbookCard
                 v-for="cookbook in cookbooks"
                 :key="cookbook._id"
                 :cookbook="cookbook"
                 :cookbooks="cookbooks"
                 :user="user"
-                @open="null /* TODO Implement opening a cookbook */"
-                @sharing="null /* TODO Implement opening cookbook sharing */"
+                @open="openCookbook"
                 @add="$refs.addRecipeModal.show(cookbook)"
-                @deleteCookbook="doDeleteCookbook"
+                @delete-cookbook="confirmDeleteCookbook"
                 @500="_500"
                 @401="$emit('401')"
             />
@@ -62,14 +68,15 @@
 
 <script>
 import CreateCookbookModal from "../components/CreateCookbookModal";
-import ShareCookbookModal from "../components/ShareCookbookModal";
 import CookbookCard from "../components/CookbookCard";
 import AddRecipeModal from "../components/AddRecipeModal";
+import CookbookView from "../components/CookbookView";
 
 import {
     getCookbooks,
     deleteCookbook,
     addRecipe,
+    removeRecipe,
 } from "../services/CookbookService";
 
 import {
@@ -86,9 +93,9 @@ export default {
     props: ["user"],
     components: {
         CreateCookbookModal,
-        ShareCookbookModal,
         CookbookCard,
         AddRecipeModal,
+        CookbookView,
     },
     data() {
         return {
@@ -98,6 +105,26 @@ export default {
         };
     },
     methods: {
+        openCookbook(cookbook) {
+            this.currentCookbook = cookbook;
+        },
+        confirmDeleteCookbook(cookbook) {
+            this.$bvModal
+                .msgBoxConfirm(
+                    `Are you sure you want to delete this cookbook? This action cannot be undone.`,
+                    {
+                        titleHtml: `Delete <span class="text-primary">${cookbook.title}</span>`,
+                        okVariant: "danger",
+                        okTitle: "Delete",
+                        cancelVariant: "outline-secondary",
+                        cancelTitle: "Cancel",
+                    }
+                )
+                .then((value) => {
+                    if (value) this.doDeleteCookbook(cookbook);
+                })
+                .catch((err) => {});
+        },
         doDeleteCookbook(cookbook) {
             deleteCookbook(cookbook._id)
                 .then(({ status }) => {
@@ -130,6 +157,8 @@ export default {
                                 JSON.stringify(data.recipes)
                             );
                             this.$refs.addRecipeModal.hide();
+                            if (this.currentCookbook)
+                                this.$refs.cookbookView.updateRecipes();
                             break;
                         case DATA_ERROR:
                             this.$refs.addRecipeModal.setError(
@@ -151,6 +180,28 @@ export default {
                     this._500(err);
                 });
         },
+        doRemoveRecipe(rid) {
+            removeRecipe(this.currentCookbook._id, rid)
+                .then(({ status, data }) => {
+                    switch (status) {
+                        case EMPTY:
+                            this.currentCookbook.recipes = this.currentCookbook.recipes.filter(
+                                (r) => r.recipe._id !== rid
+                            );
+                            this.$refs.cookbookView.updateRecipes();
+                            break;
+                        case AUTH_ERROR:
+                            this.$emit("401");
+                            break;
+                        default:
+                            this._500();
+                            break;
+                    }
+                })
+                .catch((err) => {
+                    this._500(err);
+                });
+        },
         _500(err) {
             this.$emit("500", err);
         },
@@ -162,6 +213,7 @@ export default {
                     case SUCCESS:
                         this.cookbooks = data;
                         this.loading = false;
+                        console.log(data);
                         break;
                     case AUTH_ERROR:
                         this.$router.push("/");

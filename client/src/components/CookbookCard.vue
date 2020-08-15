@@ -20,45 +20,32 @@
         </b-card-body>
         <template v-slot:footer>
             <b-btn-toolbar>
-                <b-btn-group
+                <b-btn
                     v-if="
                         cookbook.owner === user._id ||
                         cookbook.owner._id === user._id
                     "
                     size="sm"
+                    variant="outline-danger"
+                    v-b-tooltip.hover.right
+                    title="Delete"
+                    @click="$emit('delete-cookbook', cookbook)"
                 >
-                    <b-btn
-                        variant="outline-danger"
-                        v-b-tooltip.hover.left
-                        title="Delete"
-                        @click="$emit('deleteCookbook', cookbook)"
-                    >
-                        <fa-icon icon="trash-alt" />
-                    </b-btn>
-                    <b-btn
-                        variant="outline-primary"
-                        v-b-tooltip.hover.right
-                        title="Sharing"
-                        @click="$emit('sharing', cookbook)"
-                    >
-                        <fa-icon icon="users" />
-                    </b-btn>
-                </b-btn-group>
-                <b-btn-group v-else size="sm">
-                    <b-btn variant="link" disabled @click.prevent>
-                        {{ cookbook.owner.username }}
-                    </b-btn>
-                </b-btn-group>
-                <b-btn-group size="sm" class="ml-auto">
-                    <b-btn
-                        variant="outline-success"
-                        v-b-tooltip.hover.left
-                        title="Add Recipe"
-                        @click="$emit('add', cookbook)"
-                    >
-                        <fa-icon icon="plus" />
-                    </b-btn>
-                </b-btn-group>
+                    <fa-icon icon="trash-alt" />
+                </b-btn>
+                <b-btn v-else size="sm" variant="link" disabled @click.prevent>
+                    {{ cookbook.owner.username }}
+                </b-btn>
+                <b-btn
+                    size="sm"
+                    class="ml-auto"
+                    variant="outline-success"
+                    v-b-tooltip.hover.left
+                    title="Add Recipe"
+                    @click="$emit('add', cookbook)"
+                >
+                    <fa-icon icon="plus" />
+                </b-btn>
             </b-btn-toolbar>
         </template>
     </b-card>

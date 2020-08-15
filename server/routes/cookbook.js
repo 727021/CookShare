@@ -7,6 +7,7 @@ const {
     getCookbooks,
     getCookbook,
     getAll,
+    getRecipes,
     addRecipe,
     removeRecipe,
     addSharing,
@@ -56,6 +57,7 @@ router
     )
     .delete('/:cid', needsAuth, [ param('cid', 'Invalid cookbook ID').isMongoId() ], deleteCookbook)
     // Recipes
+    .get('/:cid/recipe', needsAuth, [param('cid', 'Invalid cookbook ID').isMongoId()], getRecipes)
     .post(
         '/:cid/recipe/:rid',
         needsAuth,

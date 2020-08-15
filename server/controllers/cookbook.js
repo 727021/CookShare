@@ -12,8 +12,7 @@ exports.getCookbooks = async (req, res, next) => {
         const books = await Cookbook.find()
             .or([ { owner: req.user }, { 'shared.user': req.user, 'shared.status.accepted': true } ])
             .populate('owner', 'username')
-            .populate('recipes.recipe', 'author title')
-            .populate('recipes.recipe.author', 'username')
+            .populate('recipes.recipe')
 
         res.status(200).send(books || [])
     } catch (err) {
@@ -23,10 +22,7 @@ exports.getCookbooks = async (req, res, next) => {
 
 exports.getAll = async (req, res, next) => {
     try {
-        const books = await Cookbook.find()
-            .populate('owner', 'username')
-            .populate('recipes.recipe', 'author')
-            .populate('recipes.recipe.author', 'username')
+        const books = await Cookbook.find().populate('owner', 'username').populate('recipes.recipe')
 
         res.status(200).send(books || [])
     } catch (err) {
@@ -121,6 +117,36 @@ exports.deleteCookbook = async (req, res, next) => {
     }
 }
 
+const populateRecipes = async recipes => {
+    const populated = []
+    try {
+        for (const { recipe } of recipes) populated.push(await Recipe.findById(recipe).populate('author', 'username'))
+    } catch (err) {
+        console.error(err)
+    } finally {
+        return populated
+    }
+}
+
+exports.getRecipes = async (req, res, next) => {
+    const { cid } = req.params
+
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) return res.status(422).send({ errors: errors.array() })
+
+    try {
+        const book = await Cookbook.findById(cid).or([
+            { owner: req.user },
+            { 'shared.user': req.user, 'shared.status.accepted': true }
+        ])
+        if (!book) return res.status(409).send({ error: 'Cookbook not found' })
+
+        res.status(200).send(await populateRecipes(book.recipes))
+    } catch (err) {
+        next(err)
+    }
+}
+
 exports.addRecipe = async (req, res, next) => {
     const { cid, rid } = req.params
 
@@ -177,7 +203,7 @@ exports.getComments = async (req, res, next) => {
     if (!errors.isEmpty()) return res.status(422).send({ errors: errors.array() })
 
     try {
-        const book = Cookbook.findOne({ _id: cid, 'recipes.recipe': rid }).populate(
+        const book = await Cookbook.findOne({ _id: cid, 'recipes.recipe': rid }).populate(
             'recipes.comments.author',
             'username'
         )
@@ -208,6 +234,7 @@ exports.addComment = async (req, res, next) => {
             author: req.user,
             message
         })
+        // FIXME save().populate() is not a function
         const updatedBook = await book.save().populate('recipes.comments.author', 'username')
         if (!updatedBook) return res.status(409).send({ error: 'Failed to add comment' })
         const comments = updatedBook.recipes

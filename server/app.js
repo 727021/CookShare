@@ -77,13 +77,20 @@ app
         // TODO verify access to recipe is allowed
         if (!recipe) return new PDF().end()
 
-        res.setHeader('Content-Disposition', `attachment; filename="${recipe.title}.pdf"`)
+        // res.setHeader('Content-Disposition', `attachment; filename="${recipe.title}.pdf"`)
+        res.setHeader('Content-Type', 'application/pdf')
 
         const pdf = new PDF()
         pdf.pipe(res)
 
         // TODO Actually write the recipe to the PDF
-        pdf.fontSize(24).text(recipe.title).fontSize('16').text(recipe._id).end()
+        pdf
+            .fontSize(24)
+            .text(recipe.title)
+            .fontSize('16')
+            .text(recipe._id)
+            .image(/^data/.test(recipe.image) ? recipe.image : 'server' + recipe.image)
+            .end()
     })
     .use((req, res, next) => {
         res.status(404).send({ url: req.url })
@@ -93,6 +100,7 @@ app
         res.status(500).send({ error: process.env.NODE_ENV === 'development' ? err.message : 'Server Error' })
     })
 
+let tries = 1
 const startServer = () => {
     mongoose
         .connect(process.env.MONGODB_URL, mongooseOptions)
@@ -105,7 +113,7 @@ const startServer = () => {
             })
         })
         .catch(err => {
-            console.log('Database connection failed. Retrying...')
+            console.log(`Database connection failed. Retrying... (${tries++})`)
             startServer()
         })
 }
