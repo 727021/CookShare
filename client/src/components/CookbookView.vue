@@ -95,6 +95,7 @@
             :rid="currentRecipe._id"
             :cid="cookbook._id"
             :user="user"
+            :owner="cookbook.owner"
             @500="_500"
             @401="$emit('401')"
         />

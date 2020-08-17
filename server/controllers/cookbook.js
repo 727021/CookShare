@@ -234,9 +234,10 @@ exports.addComment = async (req, res, next) => {
             author: req.user,
             message
         })
-        // FIXME save().populate() is not a function
-        const updatedBook = await book.save().populate('recipes.comments.author', 'username')
+
+        const updatedBook = await Cookbook.populate(await book.save(), { path: 'recipes.comments.author' })
         if (!updatedBook) return res.status(409).send({ error: 'Failed to add comment' })
+
         const comments = updatedBook.recipes
             .find(r => r.recipe.toString() === rid.toString())
             .comments.sort(sortComments)
@@ -258,14 +259,14 @@ exports.editComment = async (req, res, next) => {
         const book = await Cookbook.findOne({ _id: cid, 'recipes.comments._id': mid })
         if (!book) return res.status(409).send({ error: 'Cookbook not found' })
 
-        const iRecipe = book.recipes.findIndex(r => r._id.toString() === rid.toString())
+        const iRecipe = book.recipes.findIndex(r => r.recipe._id.toString() === rid.toString())
         const iComment = book.recipes[iRecipe].comments.findIndex(c => c._id.toString() === mid.toString())
         if (!(isAdmin(req) || req.user._id.toString() === book.recipes[iRecipe].comments[iComment].author.toString()))
             return res.status(401).send({ error: 'Cookbook not found' })
         book.recipes[iRecipe].comments[iComment].message = message
-        const updatedBook = await book.save().populate('recipes.comments.author', 'username')
+        const updatedBook = await Cookbook.populate(await book.save(), { path: 'recipes.comments.author' })
         if (!updatedBook) return res.status(409).send({ error: 'Failed to edit comment' })
-        const comments = updatedBook.recipes.find(r => r._id.toString() === rid.toString()).comments.sort(sortComments)
+        const comments = updatedBook.recipes.find(r => r.recipe._id.toString() === rid.toString()).comments.sort(sortComments)
 
         res.status(200).send(comments)
     } catch (err) {
@@ -283,13 +284,13 @@ exports.deleteComment = async (req, res, next) => {
         const book = await Cookbook.findOne({ _id: cid, 'recipes.comments._id': mid })
         if (!book) return res.status(409).send({ error: 'Cookbook not found' })
 
-        const iRecipe = book.recipes.findIndex(r => r._id.toString() === rid.toString())
+        const iRecipe = book.recipes.findIndex(r => r.recipe._id.toString() === rid.toString())
         const iComment = book.recipes[iRecipe].comments.findIndex(c => c._id.toString() === mid.toString())
         if (!(isAdmin(req) || req.user._id.toString() === book.recipes[iRecipe].comments[iComment].author.toString()))
             return res.status(401).send({ error: 'Cookbook not found' })
         book.recipes[iRecipe].comments = book.recipes[iRecipe].comments.filter(c => c._id.toString() !== mid.toString())
         const updatedBook = await book.save()
-        if (!updatedBook) return res.status(409).send({ error: 'Failed to edit comment' })
+        if (!updatedBook) return res.status(409).send({ error: 'Failed to delete comment' })
 
         res.status(204).end()
     } catch (err) {

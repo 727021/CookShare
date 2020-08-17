@@ -86,6 +86,8 @@ router
             body('message', 'Invalid message')
                 .isString()
                 .trim()
+                .notEmpty()
+                .withMessage('Comment cannot be empty.')
                 .isLength({ max: 256 })
                 .withMessage('Comment cannot be longer than 256 characters.')
         ],
@@ -101,6 +103,8 @@ router
             body('message', 'Invalid message')
                 .isString()
                 .trim()
+                .notEmpty()
+                .withMessage('Comment cannot be empty.')
                 .isLength({ max: 256 })
                 .withMessage('Comment cannot be longer than 256 characters.')
         ],
