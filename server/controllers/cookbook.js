@@ -3,10 +3,14 @@ const { validationResult } = require('express-validator')
 const { Cookbook, Recipe, User } = require('../models/models')
 const { isAdmin } = require('../util/isAuth')
 
+/**
+ * Used to sort comments by date
+ */
 const sortComments = (a, b) => (a.date > b.date ? -1 : 1)
 
 // TODO Replace some 409 statuses with 401
 
+//#region Cookbooks
 exports.getCookbooks = async (req, res, next) => {
     try {
         const books = await Cookbook.find()
@@ -116,7 +120,9 @@ exports.deleteCookbook = async (req, res, next) => {
         next(err)
     }
 }
+//#endregion
 
+//#region Recipes
 const populateRecipes = async recipes => {
     const populated = []
     try {
@@ -195,7 +201,9 @@ exports.removeRecipe = async (req, res, next) => {
         next(err)
     }
 }
+//#endregion
 
+//#region Comments
 exports.getComments = async (req, res, next) => {
     const { cid, rid } = req.params
 
@@ -266,7 +274,9 @@ exports.editComment = async (req, res, next) => {
         book.recipes[iRecipe].comments[iComment].message = message
         const updatedBook = await Cookbook.populate(await book.save(), { path: 'recipes.comments.author' })
         if (!updatedBook) return res.status(409).send({ error: 'Failed to edit comment' })
-        const comments = updatedBook.recipes.find(r => r.recipe._id.toString() === rid.toString()).comments.sort(sortComments)
+        const comments = updatedBook.recipes
+            .find(r => r.recipe._id.toString() === rid.toString())
+            .comments.sort(sortComments)
 
         res.status(200).send(comments)
     } catch (err) {
@@ -297,7 +307,9 @@ exports.deleteComment = async (req, res, next) => {
         next(err)
     }
 }
+//#endregion
 
+//#region Sharing
 exports.getSharing = async (req, res, next) => {
     const { cid } = req.params
 
@@ -361,7 +373,7 @@ exports.editSharing = async (req, res, next) => {
                 status
             })
         else book.shared[shared].status = status
-        const updatedBook = await book.save().populate('shared.user', 'username')
+        const updatedBook = await Cookbook.populate(await book.save(), { path: 'shared.user', select: 'username' })
         if (!updatedBook) return res.status(409).send({ error: 'Failed to update sharing' })
 
         res.status(200).send(updatedBook.shared)
@@ -392,3 +404,4 @@ exports.removeSharing = async (req, res, next) => {
         next(err)
     }
 }
+//#endregion
