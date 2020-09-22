@@ -8,7 +8,7 @@
             <b-spinner
                 v-if="loading"
                 class="m-2"
-                style="border-width: 4px;"
+                style="border-width: 4px"
             ></b-spinner>
             <b-btn
                 variant="outline-danger"
@@ -81,8 +81,32 @@
                 </b-table-simple>
             </b-tab>
             <b-tab title="Sharing" :disabled="user._id !== cookbook.owner._id"
-                ><p>Sharing Settings</p></b-tab
-            >
+                ><p>Sharing Settings</p>
+                <b-table-simple striped sticky-header hover>
+                    <b-thead>
+                        <b-tr>
+                            <b-th class="pb-2 pt-1">User</b-th>
+                            <b-th class="pb-2 pt-1">Status</b-th>
+                            <b-th class="pb-2 pt-1 text-right">
+                                <!-- TODO Maybe make this an input group -->
+                                <b-btn
+                                    variant="outline-primary"
+                                    size="sm"
+                                    class="float-right m-0"
+                                    v-b-tooltip.hover.left
+                                    title="Share Cookbook"
+                                    @click="
+                                        null /* TODO open modal or send invitation */
+                                    "
+                                >
+                                    <fa-icon icon="users" />
+                                </b-btn>
+                            </b-th>
+                        </b-tr>
+                    </b-thead>
+                    <b-tbody></b-tbody>
+                </b-table-simple>
+            </b-tab>
         </b-tabs>
 
         <RecipeView
@@ -106,13 +130,14 @@
 import RecipeView from "../components/RecipeView";
 import RecipeComments from "../components/RecipeComments";
 
-import { getRecipes } from "../services/CookbookService";
+import { getRecipes, getSharing } from "../services/CookbookService";
 
 import {
     SUCCESS,
     NOT_MODIFIED,
     AUTH_ERROR,
     CONFLICT,
+    DATA_ERROR,
 } from "../util/status-codes";
 
 export default {
@@ -124,6 +149,7 @@ export default {
     props: ["cookbook", "user"],
     data: () => ({
         recipes: [],
+        sharing: [],
         loading: true,
         currentRecipe: null,
     }),
@@ -155,13 +181,57 @@ export default {
             this.$emit("500", err);
         },
     },
-    mounted() {
+    async mounted() {
+        try {
+            const { status: rStatus, data: rData } = await getRecipes(
+                this.cookbook._id
+            );
+            switch (rStatus) {
+                case SUCCESS:
+                    this.recipes = rData;
+                    break;
+                case CONFLICT:
+                    break;
+                case AUTH_ERROR:
+                    this.$emit("401");
+                    break;
+                default:
+                    this._500();
+                    break;
+            }
+
+            if (true /* TODO if user has access to sharing */) {
+                const { status: sStatus, data: sData } = await getSharing(
+                    this.cookbook._id
+                );
+                switch (sStatus) {
+                    case SUCCESS:
+                        break;
+                    case DATA_ERROR:
+                        break;
+                    case AUTH_ERROR:
+                        this.$emit("401");
+                        break;
+                    default:
+                        this._500();
+                        break;
+                }
+            }
+
+            this.loading = false;
+        } catch (err) {
+            this._500(err);
+        }
+
         getRecipes(this.cookbook._id)
             .then(({ status, data }) => {
                 console.log(status, data);
                 switch (status) {
                     case SUCCESS:
                         this.recipes = data;
+                        getSharing(this.cookbook._id)
+                            .then(({ status, data }) => {})
+                            .catch(this._500);
                         this.loading = false;
                         break;
                     case CONFLICT:
