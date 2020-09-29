@@ -416,14 +416,14 @@ exports.addSharingAutocomplete = async (req, res, next) => {
             'shared'
         )
         if (!book) return res.status(409).send({ error: 'Cookbook not found' })
-        const shared = book.shared.map(s => s.user?._id)
+        const shared = book.shared.map(s => s.user)
 
         const users = await User.find({}, 'username')
 
         const unshared = users.filter(
             u =>
                 u._id.toString() !== req.user._id.toString() &&
-                !shared.find(s => (s?._id).toString() === u._id.toString()) &&
+                !shared.find(s => s.toString() === u._id.toString()) &&
                 new RegExp(`^${search.toString()}`, 'i').test(u.username)
         )
 
