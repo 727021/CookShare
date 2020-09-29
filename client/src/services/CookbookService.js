@@ -24,6 +24,7 @@ const deleteComment = (cid, rid, mid) => Resolve(Delete(`${url}/${cid}/recipe/${
 
 // Sharing
 const getSharing = cid => Resolve(Get(`${url}/${cid}/share`))
+const addSharingAutocomplete = (cid, q) => Resolve(Get(`${url}/${cid}/share/s?q=${q}`))
 const addSharing = (cid, uid, status) => Resolve(Post(`${url}/${cid}/share/${uid}`, { status }), CREATED)
 const editSharing = (cid, uid, status) => Resolve(Put(`${url}/${cid}/share/${uid}`, { status }))
 const removeSharing = (cid, uid) => Resolve(Delete(`${url}/${cid}/share/${uid}`), EMPTY)
@@ -42,6 +43,7 @@ export {
     editComment,
     deleteComment,
     getSharing,
+    addSharingAutocomplete,
     addSharing,
     editSharing,
     removeSharing

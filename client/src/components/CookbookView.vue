@@ -93,20 +93,38 @@
                         <b-tr>
                             <b-th class="pb-2 pt-1">User</b-th>
                             <b-th class="pb-2 pt-1">Status</b-th>
-                            <b-th class="pb-2 pt-1 text-right">
-                                <!-- TODO Maybe make this an input group -->
-                                <b-btn
-                                    variant="outline-primary"
+                            <b-th class="pb-2 pt-1">
+                                <vue-bootstrap-typeahead
+                                    class="w-50 position-relative"
+                                    style="z-index: 1000; left: 50%;"
+                                    v-model="search"
+                                    :data="autocomplete"
+                                    :serializer="(item) => item.username"
+                                    placeholder="Search Users"
                                     size="sm"
-                                    class="float-right m-0"
-                                    v-b-tooltip.hover.left
-                                    title="Share Cookbook"
-                                    @click="
-                                        null /* TODO open modal or send invitation */
-                                    "
                                 >
-                                    <fa-icon icon="users" />
-                                </b-btn>
+                                    <!-- TODO Figure out the positioning for this -->
+                                    <template #suggestion="{ htmlText }">
+                                        <span
+                                            class="float-left position-relative"
+                                            style="z-index: 1000;"
+                                            v-html="htmlText"
+                                        ></span>
+                                    </template>
+                                    <template #append>
+                                        <b-btn
+                                            variant="outline-primary"
+                                            size="sm"
+                                            class="float-right m-0"
+                                            @click="
+                                                null /* TODO open modal or send invitation */
+                                            "
+                                        >
+                                            <fa-icon icon="users" />
+                                            Share
+                                        </b-btn>
+                                    </template>
+                                </vue-bootstrap-typeahead>
                             </b-th>
                         </b-tr>
                     </b-thead>
@@ -229,6 +247,9 @@
 </template>
 
 <script>
+import VueBootstrapTypeahead from "vue-bootstrap-typeahead";
+import _ from "underscore";
+
 import RecipeView from "../components/RecipeView";
 import RecipeComments from "../components/RecipeComments";
 
@@ -247,6 +268,7 @@ export default {
     components: {
         RecipeView,
         RecipeComments,
+        VueBootstrapTypeahead,
     },
     props: ["cookbook", "user"],
     data: () => ({
@@ -260,6 +282,9 @@ export default {
             accepted: false,
             rejected: false,
         },
+        search: "",
+        autocomplete: [],
+        selectedUser: null,
     }),
     methods: {
         updateRecipes() {
@@ -304,9 +329,21 @@ export default {
                     return `<span class="badge badge-danger">${statusName}</span>`;
             }
         },
+        updateAutocomplete(q) {
+            this.autocomplete = [
+                { _id: "asdf", username: "This" },
+                { _id: "asdf", username: "And" },
+                { _id: "asdf", username: "That" },
+            ];
+        },
         _500(err) {
             this.$emit("500", err);
         },
+    },
+    watch: {
+        search: _.debounce(function (q) {
+            this.updateAutocomplete(q);
+        }, 500),
     },
     async mounted() {
         try {
