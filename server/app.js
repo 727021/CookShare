@@ -73,6 +73,7 @@ app
     })
     .use('/api', require('./routes/api'))
     // TODO Move PDF generation to a controller
+    // TODO Use POST and use a form with target="_blank" on the frontend
     .get('/pdf/:rid', needsAuth, async (req, res, next) => {
         const recipe = await Recipe.findById(req.params.rid)
         // TODO verify access to recipe is allowed

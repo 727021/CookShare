@@ -1,5 +1,5 @@
 const router = require('express').Router()
-const { body, param } = require('express-validator')
+const { body, param, query } = require('express-validator')
 
 const { needsAdmin, needsAuth } = require('../middleware/isAuth')
 
@@ -10,6 +10,7 @@ const {
     getRecipes,
     addRecipe,
     removeRecipe,
+    addSharingAutocomplete,
     addSharing,
     editSharing,
     removeSharing,
@@ -57,7 +58,7 @@ router
     )
     .delete('/:cid', needsAuth, [ param('cid', 'Invalid cookbook ID').isMongoId() ], deleteCookbook)
     // Recipes
-    .get('/:cid/recipe', needsAuth, [param('cid', 'Invalid cookbook ID').isMongoId()], getRecipes)
+    .get('/:cid/recipe', needsAuth, [ param('cid', 'Invalid cookbook ID').isMongoId() ], getRecipes)
     .post(
         '/:cid/recipe/:rid',
         needsAuth,
@@ -122,6 +123,15 @@ router
     )
     // Sharing
     .get('/:cid/share', needsAuth, [ param('cid', 'Invalid cookbook ID').isMongoId() ], getSharing)
+    .get(
+        '/:cid/share/s/',
+        needsAuth,
+        [
+            param('cid', 'Invalid cookbook ID').isMongoId(),
+            query('q', 'Invalid search').escape().trim().exists().notEmpty()
+        ],
+        addSharingAutocomplete
+    )
     .post(
         '/:cid/share/:uid',
         needsAuth,

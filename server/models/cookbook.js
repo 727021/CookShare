@@ -7,6 +7,7 @@ const statusSchema = new Schema({
     rejected: Boolean
 })
 
+// TODO Change shared to accept ObjectId(user) or String(email)
 const cookbookSchema = new Schema({
     title: {
         type: String,
@@ -20,6 +21,11 @@ const cookbookSchema = new Schema({
     },
     shared: [
         {
+            _id: {
+                type: ObjectId,
+                required: true,
+                auto: true
+            },
             user: {
                 type: ObjectId,
                 required: true,
