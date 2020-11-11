@@ -15,6 +15,13 @@ module.exports = {
         'plugin:nuxt/recommended'
     ],
     plugins: ['prettier'],
-    // add your custom rules here
-    rules: {}
+    rules: {
+        'prettier/prettier': [
+            'error',
+            {
+                endOfLine: 'auto'
+            }
+        ],
+        'no-unused-vars': true
+    }
 }

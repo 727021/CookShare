@@ -12,10 +12,23 @@
     },
     "dependencies": {
         "@nuxtjs/axios": "^5.12.2",
+        "bcrypt": "^5.0.0",
+        "body-parser": "^1.19.0",
         "bootstrap": "^4.5.2",
         "bootstrap-vue": "^2.17.3",
         "core-js": "^3.6.5",
-        "nuxt": "^2.14.6"
+        "express": "^4.17.1",
+        "express-bearer-token": "^2.4.0",
+        "express-validator": "^6.6.1",
+        "helmet": "^4.2.0",
+        "jsonwebtoken": "^8.5.1",
+        "mongoose": "^5.10.13",
+        "morgan": "^1.10.0",
+        "multer": "^1.4.2",
+        "node-cron": "^2.0.3",
+        "nuxt": "^2.14.6",
+        "pdfkit": "^0.11.0",
+        "uuid": "^8.3.1"
     },
     "devDependencies": {
         "@fortawesome/free-brands-svg-icons": "^5.15.1",
@@ -25,6 +38,7 @@
         "@nuxtjs/eslint-module": "^2.0.0",
         "@nuxtjs/fontawesome": "^1.1.2",
         "babel-eslint": "^10.1.0",
+        "dotenv": "^8.2.0",
         "eslint": "^7.10.0",
         "eslint-config-prettier": "^6.12.0",
         "eslint-plugin-nuxt": "^1.0.0",

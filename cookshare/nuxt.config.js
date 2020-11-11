@@ -51,5 +51,17 @@ export default {
             regular: true,
             brands: true
         }
+    },
+
+    router: {
+        linkActiveClass: 'active'
+    },
+
+    server: {
+        port: process.env.PORT || 3000
+    },
+
+    serverMiddleware: {
+        '/api': '~/api/app.js'
     }
 }
