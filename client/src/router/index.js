@@ -1,6 +1,12 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 
+import store from '../store'
+import { auth } from '../store/types'
+const {
+    getters: { IS_LOGGED_IN }
+} = auth
+
 import Home from '../views/Home'
 import Profile from '../views/Profile'
 import Recipes from '../views/Recipes'
@@ -31,6 +37,12 @@ const routes = [
         meta: {
             needsAuth: true
         }
+        // children: [
+        //     {
+        //         path: '/:rid',
+        //         props: true
+        //     }
+        // ]
     },
     {
         path: '/cookbooks',
@@ -59,7 +71,9 @@ const router = new VueRouter({
 })
 
 router.beforeEach((to, from, next) => {
+    // TODO if (to.meta.needsAuth && store.getters[`auth/${IS_LOGGED_IN}`]) { // Use Vuex store instead of localStorage
     if (to.meta.needsAuth && !localStorage.getItem('token')) {
+        // TODO Maybe store global error in store instead of throwing here
         const err = new Error()
         err.message = to.path
         err.name = 'NotLoggedIn'
