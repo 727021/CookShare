@@ -1,7 +1,8 @@
+/* eslint-disable no-console */
 const { promisify } = require('util')
+const path = require('path')
 const express = require('express')
 const bodyParser = require('body-parser')
-const path = require('path')
 const morgan = require('morgan')
 const mongoose = require('mongoose')
 const multer = require('multer')
@@ -60,7 +61,7 @@ app.use(morgan('dev'))
                         '-password -authToken'
                     )
                 next()
-            } catch (error) {
+            } catch (err) {
                 if (err.name === 'TokenExpiredError') next()
                 else next(err)
             }
@@ -80,10 +81,10 @@ const db = (tries, max) => {
             const jobs = startAll()
             console.log(`All cron jobs started (${jobs})`)
         })
-        .catch(err => {
+        .catch(_ => {
             console.log(
                 `Database connection failed. Retrying... (${tries}/${
-                    max ? max : ''
+                    max || ''
                 })`
             )
             if (!max || tries < max) db(tries + 1, max)
@@ -92,7 +93,7 @@ const db = (tries, max) => {
 }
 db()
 
-if (process.env.SERVER_ONLY == 1)
+if (process.env.SERVER_ONLY && +process.env.SERVER_ONLY === 1)
     app.listen(PORT, () => console.log(`Listening on port ${PORT}`))
 
 module.exports = app

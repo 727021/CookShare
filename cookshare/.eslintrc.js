@@ -22,6 +22,6 @@ module.exports = {
                 endOfLine: 'auto'
             }
         ],
-        'no-unused-vars': true
+        'no-unused-vars': 'warn'
     }
 }
