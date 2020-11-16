@@ -44,7 +44,7 @@ export default {
     build: {},
 
     fontawesome: {
-        component: 'fa',
+        component: 'fa-icon',
         icons: {
             // Change this to only include used icons
             solid: true,
@@ -54,7 +54,8 @@ export default {
     },
 
     router: {
-        linkActiveClass: 'active'
+        linkActiveClass: 'active',
+        linkExactActiveClass: 'active'
     },
 
     server: {
