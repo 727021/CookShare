@@ -14,14 +14,14 @@
                     <b-nav-item to="/recipes">Recipes</b-nav-item>
                     <b-nav-item to="/cookbooks">Cookbooks</b-nav-item>
                 </b-navbar-nav>
-                <hr class="d-lg-none" />
-                <b-navbar-nav v-if="isAuth" class="ml-auto">
+                <hr v-if="!noLogin" class="d-lg-none" />
+                <b-navbar-nav v-if="!noLogin && isAuth" class="ml-auto">
                     <b-nav-item to="/profile" :exact="true">{{
                         user.username
                     }}</b-nav-item>
                     <b-nav-item to="/logout">Log Out</b-nav-item>
                 </b-navbar-nav>
-                <b-navbar-nav v-else class="ml-auto">
+                <b-navbar-nav v-else-if="!noLogin" class="ml-auto">
                     <b-nav-item to="/login">Log In</b-nav-item>
                     <b-nav-text class="d-none d-lg-inline-block">or</b-nav-text>
                     <b-nav-item to="/register">Create Account</b-nav-item>
@@ -31,11 +31,15 @@
     </b-navbar>
 </template>
 
-<script>
+<script lang="ts">
+import Vue from 'vue'
 import { mapState, mapGetters } from 'vuex'
 
-export default {
+export default Vue.extend({
     name: 'Header',
+    props: {
+        noLogin: Boolean
+    },
     computed: { ...mapState(['user']), ...mapGetters(['isAuth']) }
-}
+})
 </script>

@@ -1,6 +1,6 @@
 <template>
     <div>
-        <Header />
+        <Header no-login />
         <Nuxt />
         <Footer />
     </div>
