@@ -20,7 +20,7 @@
         "bootstrap-vue": "^2.17.3",
         "core-js": "^3.6.5",
         "jsonwebtoken": "^8.5.1",
-        "underscore": "^1.11.0",
+        "underscore": "^1.12.1",
         "validator": "^13.1.17",
         "vue": "^2.6.12",
         "vue-bootstrap-typeahead": "^0.2.6",
